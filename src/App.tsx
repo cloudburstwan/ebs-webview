@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Activity } from 'lucide-react';
+import { Moon, Sun, Maximize2, Minimize2, Activity } from 'lucide-react';
 import Player from './components/Player';
 
 function App() {
   const [isDark, setIsDark] = useState(true);
+  const [isTheater, setIsTheater] = useState(false);
   const baseUrl = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse/s/';
   
   const [station] = useState(() => {
@@ -22,7 +23,7 @@ function App() {
   const streamUrl = `${baseUrl}${station}.m3u8`;
 
   return (
-    <div className="app-root">
+    <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
       <header className="premium-header">
         <div className="flex items-center gap-3">
           <div className="premium-logo-box p-1">
@@ -38,22 +39,35 @@ function App() {
             </div>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsTheater(!isTheater)}
+            className="theme-toggle"
+            title={isTheater ? "Exit Theater Mode" : "Theater Mode"}
+          >
+            {isTheater ? (
+              <Minimize2 className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+            ) : (
+              <Maximize2 className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+            )}
+          </button>
 
-        <button
-          onClick={() => setIsDark(!isDark)}
-          className="theme-toggle"
-          aria-label="Toggle theme"
-        >
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="theme-toggle"
+            title="Toggle Theme"
+          >
           {isDark ? (
             <Sun className="w-5 h-5 text-amber-400 icon-sun" />
           ) : (
             <Moon className="w-5 h-5 text-indigo-400 icon-moon" />
           )}
         </button>
+        </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center">
-        <div className="max-w-5xl w-full">
+      <main className={`flex-1 flex items-center justify-center ${isTheater ? 'w-full' : ''}`}>
+        <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
           <Player source={streamUrl} />
         </div>
       </main>
