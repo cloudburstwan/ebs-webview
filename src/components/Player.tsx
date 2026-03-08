@@ -8,10 +8,11 @@ if (typeof window !== 'undefined') {
 }
 
 interface PlayerProps {
-  source: string;
+  station: string;
+  baseUrl: string;
 }
 
-const Player: React.FC<PlayerProps> = ({ source }) => {
+const Player: React.FC<PlayerProps> = ({ station, baseUrl }) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<ReturnType<typeof OvenPlayer.create> | null>(null);
 
@@ -21,9 +22,24 @@ const Player: React.FC<PlayerProps> = ({ source }) => {
         autoStart: true,
         sources: [
           {
-            label: 'Live Stream',
+            label: '1080p',
             type: 'hls',
-            file: source,
+            file: `${baseUrl}${station}-1080p.m3u8`
+          },
+          {
+            label: '720p',
+            type: 'hls',
+            file: `${baseUrl}${station}-720p.m3u8`
+          },
+          {
+            label: '360p',
+            type: 'hls',
+            file: `${baseUrl}${station}-360p.m3u8`,
+          },
+          {
+            label: 'source',
+            type: 'hls',
+            file: `${baseUrl}${station}.m3u8`,
             default: true
           }
         ],
@@ -40,7 +56,7 @@ const Player: React.FC<PlayerProps> = ({ source }) => {
         playerInstance.current.remove();
       }
     };
-  }, [source]);
+  }, [station, baseUrl]);
 
   return (
     <div className="player-frame">

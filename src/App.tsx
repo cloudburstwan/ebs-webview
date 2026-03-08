@@ -20,8 +20,6 @@ function App() {
     }
   }, [isDark]);
 
-  const streamUrl = `${baseUrl}${station}.m3u8`;
-
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
       <header className="premium-header">
@@ -68,7 +66,7 @@ function App() {
 
       <main className={`flex-1 flex items-center justify-center ${isTheater ? 'w-full' : ''}`}>
         <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
-          <Player source={streamUrl} />
+          <Player station={station} baseUrl={baseUrl} />
         </div>
       </main>
 
