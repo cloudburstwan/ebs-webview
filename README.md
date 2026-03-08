@@ -46,3 +46,21 @@ The application uses environment variables for configuration:
 ## URL Parameters
 
 - `station`: Specify the stream name (e.g., `?station=test`).
+
+### IDE Support & Linting
+
+If you are using VS Code, you might see "Unknown at rule" warnings in `src/index.css` for Tailwind v4 directives like `@variant`, `@theme`, and `@utility`.
+
+The project includes a `.vscode/settings.json` file to suppress these warnings:
+
+```json
+{
+  "css.lint.unknownAtRules": "ignore"
+}
+```
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
