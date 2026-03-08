@@ -19,7 +19,9 @@ const Player: React.FC<PlayerProps> = ({ station, baseUrl }) => {
   useEffect(() => {
     if (playerRef.current) {
       playerInstance.current = OvenPlayer.create('oven-player-container', {
+        title: `EBS - ${station.charAt(0).toUpperCase() + station.slice(1)}`,
         autoStart: true,
+        playbackRates: [],
         sources: [
           {
             label: '1080p',
@@ -37,7 +39,7 @@ const Player: React.FC<PlayerProps> = ({ station, baseUrl }) => {
             file: `${baseUrl}${station}-360p.m3u8`,
           },
           {
-            label: 'source',
+            label: 'Direct',
             type: 'hls',
             file: `${baseUrl}${station}.m3u8`,
             default: true
