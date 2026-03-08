@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Radio, Activity } from 'lucide-react';
+import { Moon, Sun, Activity } from 'lucide-react';
 import Player from './components/Player';
 
 function App() {
@@ -24,12 +24,14 @@ function App() {
   return (
     <div className="app-root">
       <header className="premium-header">
-        <div className="flex items-center space-x-3">
-          <div className="premium-logo-box">
-            <Radio className="text-white w-6 h-6" />
+        <div className="flex items-center gap-3">
+          <div className="premium-logo-box p-1">
+            <img src="/ebs_icon.png" alt="EBS Logo" className="w-8 h-8 rounded-md" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Stream Webview</h1>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
+              Equestrian Broadcast Service
+            </h1>
             <div className="status-indicator">
               <Activity className="w-3 h-3 mr-1 text-emerald-600 dark:text-emerald-500 animate-pulse" />
               LIVE: <span className="ml-1 uppercase text-slate-700 dark:text-slate-300">{station}</span>
@@ -57,7 +59,7 @@ function App() {
       </main>
 
       <footer className="premium-footer">
-        &copy; {new Date().getFullYear()} Equestria Horse Streaming • {station}
+        <p>&copy; 2026 Equestrian Broadcast Service. All rights reserved.</p>
       </footer>
     </div>
   );

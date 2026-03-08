@@ -1,4 +1,4 @@
-# Stream Webview
+# Equestrian Broadcast Service
 
 A premium, high-performance HLS stream webview built with React, TypeScript, and OvenPlayer.
 
