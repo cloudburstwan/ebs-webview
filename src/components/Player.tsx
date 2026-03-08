@@ -4,7 +4,7 @@ import Hls from 'hls.js';
 
 // Ensure Hls is available globally for OvenPlayer
 if (typeof window !== 'undefined') {
-  (window as any).Hls = Hls;
+  (window as Window & { Hls?: typeof Hls }).Hls = Hls;
 }
 
 interface PlayerProps {
@@ -13,7 +13,7 @@ interface PlayerProps {
 
 const Player: React.FC<PlayerProps> = ({ source }) => {
   const playerRef = useRef<HTMLDivElement>(null);
-  const playerInstance = useRef<any>(null);
+  const playerInstance = useRef<ReturnType<typeof OvenPlayer.create> | null>(null);
 
   useEffect(() => {
     if (playerRef.current) {

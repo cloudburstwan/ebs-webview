@@ -4,16 +4,14 @@ import Player from './components/Player';
 
 function App() {
   const [isDark, setIsDark] = useState(true);
-  const [station, setStation] = useState('test');
   const baseUrl = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse/s/';
+  
+  const [station] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('station') || 'test';
+  });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const stationParam = params.get('station');
-    if (stationParam) {
-      setStation(stationParam);
-    }
-
     if (isDark) {
       document.documentElement.classList.add('dark');
     } else {
@@ -55,15 +53,6 @@ function App() {
       <main className="flex-1 flex items-center justify-center">
         <div className="max-w-5xl w-full">
           <Player source={streamUrl} />
-          
-          <div className="mt-6 flex flex-wrap gap-3">
-             <div className="info-badge info-indigo">
-               HLS Player Active
-             </div>
-             <div className="info-badge info-emerald">
-               Low Latency Enabled
-             </div>
-          </div>
         </div>
       </main>
 
