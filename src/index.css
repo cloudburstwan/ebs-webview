@@ -45,7 +45,7 @@ body {
 }
 
 @utility premium-header {
-  @apply flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl glass;
+  @apply flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl glass relative z-[100];
 }
 
 @utility premium-logo-box {
@@ -98,15 +98,66 @@ body {
 @utility theater-mode {
   @apply max-w-none w-full px-0 md:px-0 py-0 md:py-0 space-y-0 transition-all duration-500 ease-in-out;
   
-  .premium-header {
-    @apply rounded-none border-x-0 border-t-0 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50;
+  & .premium-header {
+    @apply sticky top-0 bg-transparent backdrop-blur-md border-b border-white/10 z-[100];
   }
-
-  .player-frame {
-    @apply rounded-none border-x-0 shadow-none aspect-video md:aspect-[21/9] max-h-[85vh];
+  & .player-frame {
+    @apply max-w-none w-full h-[calc(100vh-4rem)] rounded-none border-none shadow-none;
   }
-
-  .premium-footer {
+  & .premium-footer {
     @apply hidden;
   }
+}
+
+@utility status-badge {
+  @apply absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 backdrop-blur-md border shadow-lg transition-all duration-300;
+}
+
+@utility premium-dropdown {
+  @apply absolute top-full right-0 mt-2 w-64 bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 z-50;
+  animation: fade-in-slide-down 0.3s ease-out;
+}
+
+@keyframes fade-in-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility bulb-icon {
+  @apply transition-all duration-500 drop-shadow-[0_0_8px_rgba(0,0,0,0)];
+  
+  &.active {
+    @apply text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)];
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+  }
+}
+
+@utility badge-live {
+  @apply bg-emerald-500/20 text-emerald-400 border-emerald-500/30;
+  & .status-dot {
+    @apply w-2 h-2 rounded-full bg-emerald-500;
+  }
+}
+
+@utility badge-offline {
+  @apply bg-rose-500/20 text-rose-400 border-rose-500/30;
+  & .status-dot {
+    @apply w-2 h-2 rounded-full bg-rose-500;
+  }
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
 }
