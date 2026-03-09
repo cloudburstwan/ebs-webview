@@ -9,6 +9,8 @@ export const SUPPORTED_QUALITIES = import.meta.env.VITE_SUPPORTED_QUALITIES
   ? import.meta.env.VITE_SUPPORTED_QUALITIES.split(',')
   : ['360p', '720p'];
 
+export const DEFAULT_QUALITY = import.meta.env.VITE_DEFAULT_QUALITY || 'Source';
+
 export const VALIDATE_SOURCES = import.meta.env.VITE_VALIDATE_SOURCES === 'true' || false;
 export const FILTER_STATIONS = import.meta.env.VITE_FILTER_STATIONS === 'true';
 

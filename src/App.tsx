@@ -6,7 +6,7 @@ import StationDropdown from './components/StationDropdown';
 import StatusDropdown from './components/StatusDropdown';
 import { useEbsData } from './hooks/useEbsData';
 import { StreamStatus, WithholdStatus } from './utils/ebs';
-import { DEFAULT_STATION } from './utils/env';
+import { DEFAULT_STATION, DEFAULT_QUALITY } from './utils/env';
 
 function App() {
   const [isDark, setIsDark] = useState(true);
@@ -22,7 +22,7 @@ function App() {
   const [expandedStationId, setExpandedStationId] = useState<string | null>(null);
   const [region, setRegion] = useState('Default');
   const [isRegionOpen, setIsRegionOpen] = useState(false);
-  const [selectedQuality, setSelectedQuality] = useState<string | null>(null);
+  const [selectedQuality, setSelectedQuality] = useState<string | null>(DEFAULT_QUALITY);
 
   const {
     isLoading,
@@ -42,7 +42,7 @@ function App() {
 
   const handleStationChange = (newStation: string) => {
     setStation(newStation);
-    setSelectedQuality(null); // Reset quality on station change
+    setSelectedQuality(DEFAULT_QUALITY); // Reset quality on station change
     const newParams = new URLSearchParams(window.location.search);
     newParams.set('station', newStation);
     window.history.pushState({}, '', `?${newParams.toString()}`);
@@ -56,7 +56,7 @@ function App() {
 
   const handleHomeClick = () => {
     setStation(DEFAULT_STATION);
-    setSelectedQuality(null);
+    setSelectedQuality(DEFAULT_QUALITY);
     const newParams = new URLSearchParams(window.location.search);
     newParams.delete('station');
     const newUrl = newParams.toString() ? `?${newParams.toString()}` : window.location.pathname;
@@ -64,24 +64,26 @@ function App() {
     setExpandedStationId(null);
   };
 
-  // Transform sources to mark the manually selected quality as default and move it to the front
-  // OvenPlayer prioritizes the first source in the list for initial playback
-  const activeSources = useMemo(() => {
-    const mapped = sources.map(source => ({
+  // UI Sources: Preserve original order for the dropdown menu
+  const uiSources = useMemo(() => {
+    return sources.map(source => ({
       ...source,
       default: selectedQuality ? source.label === selectedQuality : source.default
     }));
+  }, [sources, selectedQuality]);
 
+  // Player Sources: Reorder to put selected quality first for OvenPlayer priority 
+  const playerSources = useMemo(() => {
+    const sorted = [...uiSources];
     if (selectedQuality) {
-      const selectedIndex = mapped.findIndex(s => s.label === selectedQuality);
+      const selectedIndex = sorted.findIndex(s => s.label === selectedQuality);
       if (selectedIndex !== -1) {
-        const [selected] = mapped.splice(selectedIndex, 1);
-        return [selected, ...mapped];
+        const [selected] = sorted.splice(selectedIndex, 1);
+        return [selected, ...sorted];
       }
     }
-
-    return mapped;
-  }, [sources, selectedQuality]);
+    return sorted;
+  }, [uiSources, selectedQuality]);
 
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
@@ -108,38 +110,39 @@ function App() {
           expandedStationId={expandedStationId}
           onToggleExpanded={(id) => setExpandedStationId(expandedStationId === id ? null : id)}
         />
-        <StatusDropdown
-          isOpen={isStatusOpen}
-          onToggle={() => {
-            setIsStatusOpen(!isStatusOpen);
-            setIsStreamSelectionOpen(false);
-            setIsRegionOpen(false);
-          }}
-          currentStream={currentStream}
-          region={region}
-          isRegionOpen={isRegionOpen}
-          onRegionToggle={(e) => {
-            e.stopPropagation();
-            setIsRegionOpen(!isRegionOpen);
-          }}
-          onRegionSelect={(r) => {
-            setRegion(r);
-            setIsRegionOpen(false);
-          }}
-          sources={activeSources}
-          onSourceSelect={handleSourceSelect}
-        />
-      </Header>
-
-      <main className={`flex-1 flex items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
-        <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
-          <Player
-            station={station}
-            isValidating={isLoading || isValidatingSources}
-            status={currentStream?.status ?? StreamStatus.Offline}
-            witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
-            sources={activeSources}
+          <StatusDropdown
+            isOpen={isStatusOpen}
+            onToggle={() => {
+              setIsStatusOpen(!isStatusOpen);
+              setIsStreamSelectionOpen(false);
+              setIsRegionOpen(false);
+            }}
+            currentStream={currentStream}
+            region={region}
+            isRegionOpen={isRegionOpen}
+            onRegionToggle={(e) => {
+              e.stopPropagation();
+              setIsRegionOpen(!isRegionOpen);
+            }}
+            onRegionSelect={(r) => {
+              setRegion(r);
+              setIsRegionOpen(false);
+            }}
+            sources={uiSources}
+            onSourceSelect={handleSourceSelect}
           />
+        </Header>
+
+        <main className={`flex-1 flex items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
+          <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
+            <Player
+              station={station}
+              isValidating={isLoading || isValidatingSources}
+              status={currentStream?.status ?? StreamStatus.Offline}
+              witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
+              sources={playerSources}
+              selectedQuality={selectedQuality}
+            />
         </div>
       </main>
 
