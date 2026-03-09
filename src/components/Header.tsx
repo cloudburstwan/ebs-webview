@@ -1,4 +1,3 @@
-import React from 'react';
 import { Activity, RectangleHorizontal, Sun, Moon } from 'lucide-react';
 import { StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
@@ -12,14 +11,14 @@ interface HeaderProps {
     children: React.ReactNode;
 }
 
-const Header: React.FC<HeaderProps> = ({
+const Header = ({
     currentStream,
     isTheater,
     onTheaterToggle,
     isDark,
     onDarkToggle,
     children
-}) => {
+}: HeaderProps) => {
     return (
         <header className="premium-header">
             <div className="flex items-center gap-3 flex-shrink-0">

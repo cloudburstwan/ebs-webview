@@ -1,4 +1,3 @@
-import React from 'react';
 import { Radio, ChevronDown, Activity } from 'lucide-react';
 import { StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
@@ -13,7 +12,7 @@ interface StationDropdownProps {
   onToggleExpanded: (id: string) => void;
 }
 
-const StationDropdown: React.FC<StationDropdownProps> = ({
+const StationDropdown = ({
   isOpen,
   onToggle,
   availableStreams,
@@ -21,7 +20,7 @@ const StationDropdown: React.FC<StationDropdownProps> = ({
   onStationChange,
   expandedStationId,
   onToggleExpanded
-}) => {
+}: StationDropdownProps) => {
   return (
     <div className="relative">
       <button

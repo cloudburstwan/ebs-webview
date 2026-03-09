@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import OvenPlayer from 'ovenplayer';
 import Hls from 'hls.js';
 
@@ -22,7 +22,7 @@ interface PlayerProps {
   }[];
 }
 
-const Player: React.FC<PlayerProps> = ({ station, isValidating, status, witholdStatus, sources }) => {
+const Player = ({ station, isValidating, status, witholdStatus, sources }: PlayerProps) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
   const [hasError, setHasError] = useState(false);

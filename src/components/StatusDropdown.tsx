@@ -1,4 +1,3 @@
-import React from 'react';
 import { Lightbulb, ChevronDown, Radio } from 'lucide-react';
 import { StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
@@ -13,7 +12,7 @@ interface StatusDropdownProps {
   onRegionSelect: (region: string) => void;
 }
 
-const StatusDropdown: React.FC<StatusDropdownProps> = ({
+const StatusDropdown = ({
   isOpen,
   onToggle,
   currentStream,
@@ -21,7 +20,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   isRegionOpen,
   onRegionToggle,
   onRegionSelect
-}) => {
+}: StatusDropdownProps) => {
   return (
     <div className="relative">
       <button
