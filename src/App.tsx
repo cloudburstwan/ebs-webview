@@ -49,11 +49,6 @@ function App() {
     setIsStreamSelectionOpen(false);
   };
 
-  const handleSourceSelect = (label: string) => {
-    console.log(`[App] Switching stream to ${label}`);
-    setSelectedQuality(label);
-  };
-
   const handleHomeClick = () => {
     setStation(DEFAULT_STATION);
     setSelectedQuality(DEFAULT_QUALITY);
@@ -110,39 +105,37 @@ function App() {
           expandedStationId={expandedStationId}
           onToggleExpanded={(id) => setExpandedStationId(expandedStationId === id ? null : id)}
         />
-          <StatusDropdown
-            isOpen={isStatusOpen}
-            onToggle={() => {
-              setIsStatusOpen(!isStatusOpen);
-              setIsStreamSelectionOpen(false);
-              setIsRegionOpen(false);
-            }}
-            currentStream={currentStream}
-            region={region}
-            isRegionOpen={isRegionOpen}
-            onRegionToggle={(e) => {
-              e.stopPropagation();
-              setIsRegionOpen(!isRegionOpen);
-            }}
-            onRegionSelect={(r) => {
-              setRegion(r);
-              setIsRegionOpen(false);
-            }}
-            sources={uiSources}
-            onSourceSelect={handleSourceSelect}
-          />
-        </Header>
+        <StatusDropdown
+          isOpen={isStatusOpen}
+          onToggle={() => {
+            setIsStatusOpen(!isStatusOpen);
+            setIsStreamSelectionOpen(false);
+            setIsRegionOpen(false);
+          }}
+          currentStream={currentStream}
+          region={region}
+          isRegionOpen={isRegionOpen}
+          onRegionToggle={(e) => {
+            e.stopPropagation();
+            setIsRegionOpen(!isRegionOpen);
+          }}
+          onRegionSelect={(r) => {
+            setRegion(r);
+            setIsRegionOpen(false);
+          }}
+        />
+      </Header>
 
-        <main className={`flex-1 flex items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
-          <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
-            <Player
-              station={station}
-              isValidating={isLoading || isValidatingSources}
-              status={currentStream?.status ?? StreamStatus.Offline}
-              witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
-              sources={playerSources}
-              selectedQuality={selectedQuality}
-            />
+      <main className={`flex-1 flex items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
+        <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
+          <Player
+            station={station}
+            isValidating={isLoading || isValidatingSources}
+            status={currentStream?.status ?? StreamStatus.Offline}
+            witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
+            sources={playerSources}
+            selectedQuality={selectedQuality}
+          />
         </div>
       </main>
 

@@ -10,8 +10,6 @@ interface StatusDropdownProps {
   isRegionOpen: boolean;
   onRegionToggle: (e: React.MouseEvent) => void;
   onRegionSelect: (region: string) => void;
-  sources: any[];
-  onSourceSelect: (label: string) => void;
 }
 
 const StatusDropdown = ({
@@ -21,9 +19,7 @@ const StatusDropdown = ({
   region,
   isRegionOpen,
   onRegionToggle,
-  onRegionSelect,
-  sources,
-  onSourceSelect
+  onRegionSelect
 }: StatusDropdownProps) => {
   return (
     <div className="relative">
@@ -86,7 +82,7 @@ const StatusDropdown = ({
                       </div>
                       <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isRegionOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     {isRegionOpen && (
                       <div className="absolute bottom-full left-0 right-0 mb-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-[110] animate-fade-in-slide-up">
                         <button
@@ -100,31 +96,6 @@ const StatusDropdown = ({
                     )}
                   </div>
                 </div>
-                
-                {/* Qualities Section */}
-                {sources && sources.length > 0 && (
-                  <div className="flex flex-col gap-1.5 pt-2">
-                    <span className="text-[10px] font-bold uppercase text-slate-500/60 dark:text-slate-500 tracking-widest pl-1">Available Qualities</span>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {sources.map((source, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => onSourceSelect(source.label)}
-                          className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
-                            source.default 
-                              ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400 font-bold' 
-                              : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'
-                          }`}
-                        >
-                          <span className="text-[10px] uppercase tracking-wider">{source.label}</span>
-                          {source.default && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-glow" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
