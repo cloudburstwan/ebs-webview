@@ -119,7 +119,7 @@ function App() {
                   <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                     {availableStreams.length > 0 ? (
                       availableStreams
-                        .filter(s => (s.withhold ?? s.witholdStatus ?? 0) === 0)
+                        .filter(s => (s.witholdStatus ?? 0) === 0)
                         .map((s) => (
                           <div key={s.id} className="flex flex-col gap-1">
                             <div className="flex items-center gap-1">
@@ -288,7 +288,7 @@ function App() {
             station={station}
             isValidating={isLoading}
             status={currentStream?.status ?? StreamStatus.Offline}
-            withhold={currentStream?.withhold ?? WithholdStatus.None}
+            witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
             sources={currentStream?.sources || []}
           />
         </div>

@@ -13,7 +13,7 @@ interface PlayerProps {
   station: string;
   isValidating: boolean;
   status: StreamStatus;
-  withhold: WithholdStatus;
+  witholdStatus: WithholdStatus;
   sources: {
     label: string;
     file: string;
@@ -22,7 +22,7 @@ interface PlayerProps {
   }[];
 }
 
-const Player: React.FC<PlayerProps> = ({ station, isValidating, status, withhold, sources }) => {
+const Player: React.FC<PlayerProps> = ({ station, isValidating, status, witholdStatus, sources }) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
   const [hasError, setHasError] = useState(false);
@@ -30,7 +30,7 @@ const Player: React.FC<PlayerProps> = ({ station, isValidating, status, withhold
 
   const isLive = status === StreamStatus.Live;
   const isStarting = status === StreamStatus.Starting;
-  const isWithheld = withhold !== WithholdStatus.None;
+  const isWithheld = witholdStatus !== WithholdStatus.None;
 
   // Reset error state when sources or station change
   useEffect(() => {
@@ -114,7 +114,7 @@ const Player: React.FC<PlayerProps> = ({ station, isValidating, status, withhold
 
   const getErrorMessage = () => {
     if (isWithheld) {
-      switch (withhold) {
+      switch (witholdStatus) {
         case WithholdStatus.Legal: return "This stream has been withheld for legal reasons.";
         case WithholdStatus.Policy: return "This stream is withheld due to policy restrictions.";
         case WithholdStatus.Issues: return "This stream is temporarily withheld due to technical issues.";

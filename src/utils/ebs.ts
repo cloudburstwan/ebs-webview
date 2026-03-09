@@ -26,10 +26,8 @@ export interface StreamEntry {
     id: string;
     name: string;
     status: StreamStatus;
-    withhold: WithholdStatus;
-    witholdStatus?: WithholdStatus; // API typo support
+    witholdStatus: WithholdStatus; // API typo support
     viewers?: number;
-    thumbnail?: string;
     station: string;
     qualities?: string[];
     sources: {
@@ -81,7 +79,7 @@ export class EBSApi {
                 ...s,
                 name: s.name || 'Unknown',
                 station: s.station || s.name || 'Unknown',
-                withhold: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? s.withhold : WithholdStatus.None),
+                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? s.withhold : WithholdStatus.None),
                 sources: s.sources || []
             }));
         } catch (error) {
