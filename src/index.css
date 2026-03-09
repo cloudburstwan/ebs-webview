@@ -7,6 +7,47 @@
   --color-premium-accent: #14b8a6;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --animate-fade-in-slide-down: fade-in-slide-down 0.3s ease-out;
+  --animate-fade-in-slide-up: fade-in-slide-up 0.3s ease-out;
+  --animate-pulse-glow: pulse-glow 2s infinite;
+
+  @keyframes fade-in-slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
 }
 
 :root {
@@ -126,18 +167,6 @@ body {
   animation: fade-in-slide-down 0.3s ease-out;
 }
 
-@keyframes fade-in-slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @utility bulb-icon {
   @apply transition-all duration-500 drop-shadow-[0_0_8px_rgba(0,0,0,0)];
 
@@ -161,25 +190,4 @@ body {
   & .status-dot {
     @apply w-2 h-2 rounded-full bg-rose-500;
   }
-}
-
-@keyframes pulse-glow {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s infinite;
 }

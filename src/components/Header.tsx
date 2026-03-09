@@ -58,6 +58,7 @@ const Header = ({
                     onClick={onTheaterToggle}
                     className="theme-toggle"
                     title={isTheater ? "Exit Theater Mode" : "Theater Mode"}
+                    aria-label={isTheater ? "Exit Theater Mode" : "Theater Mode"}
                 >
                     {isTheater ? (
                         <RectangleHorizontal className="w-5 h-5 text-teal-500 fill-teal-500/20" />
@@ -70,6 +71,7 @@ const Header = ({
                     onClick={onDarkToggle}
                     className="theme-toggle"
                     title="Toggle Theme"
+                    aria-label="Toggle Theme"
                 >
                     {isDark ? (
                         <Sun className="w-5 h-5 text-amber-400 icon-sun" />

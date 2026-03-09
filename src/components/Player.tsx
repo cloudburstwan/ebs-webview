@@ -126,7 +126,7 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
   };
 
   return (
-    <div className="player-frame group relative">
+    <div className="player-frame group relative" role="application" aria-label={`Video player for ${station}`}>
       {/* Status Badge */}
       {!isValidating && (
         <div className={`status-badge ${(isLive && !hasError) ? 'badge-live' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}>

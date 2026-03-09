@@ -27,6 +27,8 @@ const StatusDropdown = ({
         onClick={onToggle}
         className={`theme-toggle flex items-center gap-2 px-4 transition-all duration-300 h-11 ${isOpen ? 'bg-slate-200 dark:bg-white/10' : ''}`}
         title="Stream Status"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
       >
         <Lightbulb className={`w-5 h-5 transition-all duration-300 ${currentStream?.status === StreamStatus.Live ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
           currentStream?.status === StreamStatus.Starting ? 'text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' :

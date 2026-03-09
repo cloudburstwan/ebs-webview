@@ -67,9 +67,9 @@ export class EBSApi {
         return `${base}/${API_VERSION}`;
     }
 
-    async getStreams(): Promise<StreamEntry[]> {
+    async getStreams(signal?: AbortSignal): Promise<StreamEntry[]> {
         try {
-            const response = await fetch(`${this.apiUrl}/streams`);
+            const response = await fetch(`${this.apiUrl}/streams`, { signal });
             if (!response.ok) {
                 throw new Error(`Failed to fetch streams: ${response.statusText}`);
             }
@@ -90,9 +90,9 @@ export class EBSApi {
         }
     }
 
-    async getStatus(): Promise<EBSStatus | null> {
+    async getStatus(signal?: AbortSignal): Promise<EBSStatus | null> {
         try {
-            const response = await fetch(`${this.apiUrl}/status`);
+            const response = await fetch(`${this.apiUrl}/status`, { signal });
             if (!response.ok) {
                 throw new Error(`Failed to fetch status: ${response.statusText}`);
             }

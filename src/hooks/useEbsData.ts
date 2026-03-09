@@ -10,9 +10,11 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
   const [isValidatingSources, setIsValidatingSources] = useState(false);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchStreams = async () => {
       setIsLoading(true);
-      const streams = await ebsApi.getStreams();
+      const streams = await ebsApi.getStreams(abortController.signal);
       setAvailableStreams(streams);
 
       // Find stream matching station or default to first one if station not found
@@ -20,7 +22,6 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       if (match) {
         setCurrentStream(match);
       } else if (streams.length > 0 && station === 'test') {
-        // If we are on 'test' but it's not live, maybe pick the first available
         setCurrentStream(streams[0]);
         setStation(streams[0].station);
       } else {
@@ -31,14 +32,18 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
     };
 
     fetchStreams();
-    // Refresh every 30 seconds
     const interval = setInterval(fetchStreams, 30000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, [station, setStation]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const validateSources = async () => {
-      // If we already have sources from the API, use them
       if (currentStream?.sources && currentStream.sources.length > 0) {
         setSources(currentStream.sources);
         setIsValidatingSources(false);
@@ -46,13 +51,6 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       }
 
       setIsValidatingSources(true);
-
-      // If we already have sources for this station and they aren't empty, 
-      // we might have already validated. 
-      if (sources.length > 0 && !currentStream?.sources?.length) {
-        setIsValidatingSources(false);
-        return;
-      }
 
       const baseUrl = STREAM_BASE_URL.endsWith('/') ? STREAM_BASE_URL : `${STREAM_BASE_URL}/`;
       const potentialSources = [
@@ -62,45 +60,55 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
         { label: 'Direct', file: `${baseUrl}${station}.m3u8`, default: true }
       ];
 
-      const validated = [];
-      for (const src of potentialSources) {
+      const validationPromises = potentialSources.map(async (src) => {
         try {
-          // Step 1: Try a regular fetch to read status code (works if CORS is enabled)
-          const response = await fetch(src.file, { method: 'HEAD' });
+          const response = await fetch(src.file, { 
+            method: 'HEAD', 
+            signal: abortController.signal 
+          });
           if (response.ok) {
-            validated.push({
+            return {
               label: src.label,
               type: 'hls' as const,
               file: src.file,
               default: src.default
-            });
-          } else if (response.status === 404) {
-            console.log(`[Validation] Source ${src.label} explicitly return 404 - skipping.`);
+            };
           }
-        } catch (error) {
-          // Step 2: Fallback to no-cors if blocked by security policies
+        } catch (error: any) {
+          if (error.name === 'AbortError') return null;
+          
           try {
-            const fallback = await fetch(src.file, { method: 'HEAD', mode: 'no-cors' });
+            const fallback = await fetch(src.file, { 
+              method: 'HEAD', 
+              mode: 'no-cors',
+              signal: abortController.signal 
+            });
             if (fallback.type === 'opaque') {
-              console.log(`[Validation] Source ${src.label} blocked by CORS - using best-effort validation.`);
-              validated.push({
+              return {
                 label: src.label,
                 type: 'hls' as const,
                 file: src.file,
                 default: src.default
-              });
+              };
             }
           } catch (fallbackError) {
-            console.warn(`[Validation] Full validation failure for ${src.label}:`, fallbackError);
+            return null;
           }
         }
-      }
+        return null;
+      });
 
-      setSources(validated);
-      setIsValidatingSources(false);
+      const results = await Promise.all(validationPromises);
+      const validated = results.filter((r): r is NonNullable<typeof r> => r !== null);
+
+      if (!abortController.signal.aborted) {
+        setSources(validated);
+        setIsValidatingSources(false);
+      }
     };
 
     validateSources();
+    return () => abortController.abort();
   }, [station, currentStream]);
 
   return {

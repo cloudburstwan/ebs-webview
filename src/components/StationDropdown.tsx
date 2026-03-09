@@ -27,6 +27,8 @@ const StationDropdown = ({
         onClick={onToggle}
         className={`theme-toggle flex items-center gap-2 px-4 transition-all duration-300 h-11 ${isOpen ? 'bg-slate-200 dark:bg-white/10' : ''}`}
         title="Select Station"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
         <Radio className={`w-5 h-5 ${isOpen ? 'text-teal-500' : 'text-slate-700 dark:text-slate-300'}`} />
         <span className="hidden sm:inline font-semibold text-sm text-slate-700 dark:text-white">Stations</span>

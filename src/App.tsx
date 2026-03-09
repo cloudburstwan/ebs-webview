@@ -48,6 +48,9 @@ function App() {
 
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
+      <title>{currentStream ? `${currentStream.name} - EBS` : 'Equestrian Broadcast Service'}</title>
+      <meta name="description" content={currentStream ? `Watching ${currentStream.name} on EBS` : 'Equestrian Broadcast Service - Streaming Platform'} />
+      
       <Header
         currentStream={currentStream}
         isTheater={isTheater}
