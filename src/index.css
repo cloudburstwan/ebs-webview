@@ -102,14 +102,14 @@ body {
 }
 
 @utility theater-mode {
-  @apply max-w-none w-full px-0 md:px-0 py-0 md:py-0 space-y-0 transition-all duration-500 ease-in-out;
+  @apply max-w-none w-full h-screen overflow-hidden px-0 md:px-0 py-0 md:py-0 space-y-0 transition-all duration-500 ease-in-out;
 
   & .premium-header {
-    @apply sticky top-0 bg-transparent backdrop-blur-md border-b border-white/10 z-[100];
+    @apply sticky top-0 bg-transparent backdrop-blur-md border-b border-white/10 z-[100] mb-0 rounded-none border-x-0 border-t-0;
   }
 
   & .player-frame {
-    @apply max-w-none w-full h-[calc(100vh-4rem)] rounded-none border-none shadow-none;
+    @apply max-w-none w-full h-[calc(100vh-5rem)] rounded-none border-none shadow-none;
   }
 
   & .premium-footer {
