@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ebsApi, STREAM_BASE_URL } from '../utils/ebs';
+import { ebsApi } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
+import { DEFAULT_STATION, SUPPORTED_QUALITIES, VALIDATE_SOURCES, STREAM_BASE_URL } from '../utils/env';
 
-const DEFAULT_STATION = 'test';
-const SUPPORTED_QUALITIES = ['360p'];
-const VALIDATE_SOURCES = false;
 
 export function useEbsData(station: string, setStation: (s: string) => void) {
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +55,7 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       const baseUrl = STREAM_BASE_URL.endsWith('/') ? STREAM_BASE_URL : `${STREAM_BASE_URL}/`;
 
       const potentialSources = [
-        ...SUPPORTED_QUALITIES.map(q => ({
+        ...SUPPORTED_QUALITIES.map((q: string) => ({
           label: q,
           file: `${baseUrl}${station}-${q}.m3u8`,
           default: false

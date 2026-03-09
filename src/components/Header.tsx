@@ -8,6 +8,7 @@ interface HeaderProps {
     onTheaterToggle: () => void;
     isDark: boolean;
     onDarkToggle: () => void;
+    onHomeClick: () => void;
     children: React.ReactNode;
 }
 
@@ -17,16 +18,24 @@ const Header = ({
     onTheaterToggle,
     isDark,
     onDarkToggle,
+    onHomeClick,
     children
 }: HeaderProps) => {
     return (
         <header className="premium-header">
-            <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="premium-logo-box">
+            <div 
+                className="flex items-center gap-3 flex-shrink-0 cursor-pointer group active:scale-95 transition-transform duration-200"
+                onClick={onHomeClick}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onHomeClick()}
+                aria-label="Go to Home"
+            >
+                <div className="premium-logo-box group-hover:drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]">
                     <img src="/unicorse.webp" alt="EBS Logo" className="w-8 h-8 rounded-md" />
                 </div>
                 <div className="flex flex-col items-start translate-y-[-1px]">
-                    <h1 className="text-xl font-extrabold tracking-tight text-teal-600 dark:text-teal-400">
+                    <h1 className="text-xl font-extrabold tracking-tight text-teal-600 dark:text-teal-400 group-hover:text-teal-500 transition-colors">
                         Equestrian Broadcast Service
                     </h1>
                     <div className="status-indicator">

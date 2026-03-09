@@ -6,6 +6,7 @@ import StationDropdown from './components/StationDropdown';
 import StatusDropdown from './components/StatusDropdown';
 import { useEbsData } from './hooks/useEbsData';
 import { StreamStatus, WithholdStatus } from './utils/ebs';
+import { DEFAULT_STATION } from './utils/env';
 
 function App() {
   const [isDark, setIsDark] = useState(true);
@@ -13,7 +14,7 @@ function App() {
 
   const [station, setStation] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('station') || 'test';
+    return params.get('station') || DEFAULT_STATION;
   });
 
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -46,17 +47,27 @@ function App() {
     setIsStreamSelectionOpen(false);
   };
 
+  const handleHomeClick = () => {
+    setStation(DEFAULT_STATION);
+    const newParams = new URLSearchParams(window.location.search);
+    newParams.delete('station');
+    const newUrl = newParams.toString() ? `?${newParams.toString()}` : window.location.pathname;
+    window.history.pushState({}, '', newUrl);
+    setExpandedStationId(null);
+  };
+
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
       <title>{currentStream ? `${currentStream.name} - EBS` : 'Equestrian Broadcast Service'}</title>
       <meta name="description" content={currentStream ? `Watching ${currentStream.name} on EBS` : 'Equestrian Broadcast Service - Streaming Platform'} />
-      
+
       <Header
         currentStream={currentStream}
         isTheater={isTheater}
         onTheaterToggle={() => setIsTheater(!isTheater)}
         isDark={isDark}
         onDarkToggle={() => setIsDark(!isDark)}
+        onHomeClick={handleHomeClick}
       >
         <StationDropdown
           isOpen={isStreamSelectionOpen}

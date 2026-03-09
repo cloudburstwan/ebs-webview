@@ -29,7 +29,6 @@ export interface StreamEntry {
     witholdStatus: WithholdStatus; // API typo support
     viewers?: number;
     station: string;
-    qualities?: string[];
     sources: {
         label: string;
         file: string;
@@ -48,10 +47,7 @@ export interface EBSStatus {
     connections: number;
 }
 
-export const DEFAULT_BASE_URL = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse';
-
-export const STREAM_BASE_URL = DEFAULT_BASE_URL + 's';
-const API_VERSION = 'api/v1';
+import { DEFAULT_BASE_URL, API_VERSION } from './env';
 
 export class EBSApi {
     private baseUrl: string;
