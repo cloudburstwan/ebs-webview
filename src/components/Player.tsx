@@ -129,31 +129,31 @@ const Player: React.FC<PlayerProps> = ({ station, isValidating, status, witholdS
     <div className="player-frame group relative">
       {/* Status Badge */}
       {!isValidating && (
-        <div className={`status-badge ${(isLive && !hasError) ? 'badge-live' : (isStarting ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'badge-offline')}`}>
+        <div className={`status-badge ${(isLive && !hasError) ? 'badge-live' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}>
           <span className={`status-dot ${(isLive && !hasError) ? 'animate-pulse-glow' : (isStarting ? 'bg-amber-500 animate-pulse' : '')}`}></span>
           {getStatusLabel()}
         </div>
       )}
 
       {isValidating ? (
-        <div className="w-full h-full flex items-center justify-center bg-black/40 rounded-xl">
+        <div className="w-full h-full flex items-center justify-center bg-slate-200/20 dark:bg-black/40 rounded-xl">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-white/10 border-t-white/60 rounded-full animate-spin"></div>
-            <p className="text-white/60 font-medium animate-pulse">Initializing Stream...</p>
+            <div className="w-12 h-12 border-4 border-slate-400/20 border-t-teal-500 rounded-full animate-spin"></div>
+            <p className="text-slate-600 dark:text-white/60 font-medium animate-pulse">Initializing Stream...</p>
           </div>
         </div>
       ) : (!isLive || hasError || isWithheld) ? (
-        <div className="w-full h-full flex items-center justify-center bg-black/40 rounded-xl">
+        <div className="w-full h-full flex items-center justify-center bg-slate-200/20 dark:bg-black/40 rounded-xl">
           <div className="text-center px-6">
             <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border ${isStarting ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
               <svg className={`w-10 h-10 ${isStarting ? 'text-amber-500' : 'text-rose-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               {hasError ? 'Connection Error' : (isWithheld ? 'Stream Withheld' : (isStarting ? 'Starting Soon' : 'Stream Unavailable'))}
             </h3>
-            <p className="text-white/60">
+            <p className="text-slate-500 dark:text-white/60">
               {hasError
                 ? 'The connection was lost. We are attempting to reconnect...'
                 : getErrorMessage()}
