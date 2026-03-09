@@ -21,6 +21,8 @@ function App() {
   const [expandedStationId, setExpandedStationId] = useState<string | null>(null);
   const [sources, setSources] = useState<any[]>([]);
   const [isValidatingSources, setIsValidatingSources] = useState(false);
+  const [region, setRegion] = useState('Default');
+  const [isRegionOpen, setIsRegionOpen] = useState(false);
 
   useEffect(() => {
     const fetchStreams = async () => {
@@ -233,6 +235,15 @@ function App() {
 
                             {expandedStationId === s.id && s.dates && (
                               <div className="mx-2 p-3 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 space-y-2 animate-fade-in-slide-down">
+                                <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-200 dark:border-white/5">
+                                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    <span>Status</span>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${s.status === StreamStatus.Live ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                  </div>
+                                  <span className={`text-xs font-bold ${s.status === StreamStatus.Live ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    {s.status === StreamStatus.Live ? 'Online' : 'Offline'}
+                                  </span>
+                                </div>
                                 <div className="flex flex-col gap-1.5">
                                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
                                     <span>Stream Period</span>
@@ -278,6 +289,7 @@ function App() {
               onClick={() => {
                 setIsStatusOpen(!isStatusOpen);
                 setIsStreamSelectionOpen(false);
+                setIsRegionOpen(false);
               }}
               className={`theme-toggle flex items-center gap-2 px-4 transition-all duration-300 h-11 ${isStatusOpen ? 'bg-slate-200 dark:bg-white/10' : ''}`}
               title="Stream Status"
@@ -320,8 +332,41 @@ function App() {
                       </div>
                     )}
 
-                    <div className="pt-2 border-t border-slate-200 dark:border-white/10">
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed italic">
+                    <div className="pt-2 border-t border-slate-200 dark:border-white/10 space-y-2">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold uppercase text-slate-500/60 dark:text-slate-500 tracking-widest pl-1">Region</span>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsRegionOpen(!isRegionOpen);
+                            }}
+                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-white/10"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Radio className="w-3.5 h-3.5 text-teal-500" />
+                              <span>{region}</span>
+                            </div>
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isRegionOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          
+                          {isRegionOpen && (
+                            <div className="absolute bottom-full left-0 right-0 mb-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-[110] animate-fade-in-slide-up">
+                              <button
+                                onClick={() => {
+                                  setRegion('Default');
+                                  setIsRegionOpen(false);
+                                }}
+                                className="w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                              >
+                                <span>Default</span>
+                                {region === 'Default' && <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed italic pl-1">
                         Quality is automatically optimized for your connection.
                       </p>
                     </div>
