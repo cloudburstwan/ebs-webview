@@ -140,7 +140,7 @@ function App() {
             <img src="/unicorse.webp" alt="EBS Logo" className="w-8 h-8 rounded-md" />
           </div>
           <div className="flex flex-col items-start translate-y-[-1px]">
-            <h1 className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 dark:from-white dark:via-teal-200 dark:to-slate-300">
+            <h1 className="text-xl font-extrabold tracking-tight text-teal-600 dark:text-teal-400">
               Equestrian Broadcast Service
             </h1>
             <div className="status-indicator">
