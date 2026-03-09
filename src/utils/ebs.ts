@@ -48,7 +48,7 @@ export interface EBSStatus {
     connections: number;
 }
 
-const DEFAULT_BASE_URL = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse';
+export const DEFAULT_BASE_URL = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse';
 const API_VERSION = 'api/v1';
 
 export class EBSApi {

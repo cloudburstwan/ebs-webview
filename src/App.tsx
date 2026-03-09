@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Moon, Sun, Activity, Lightbulb, ChevronDown, RectangleHorizontal, Radio } from 'lucide-react';
 import Player from './components/Player';
-import { ebsApi, StreamStatus, WithholdStatus } from './utils/ebs';
+import { ebsApi, StreamStatus, WithholdStatus, DEFAULT_BASE_URL } from './utils/ebs';
 import type { StreamEntry } from './utils/ebs';
 
 function App() {
@@ -19,6 +19,8 @@ function App() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isStreamSelectionOpen, setIsStreamSelectionOpen] = useState(false);
   const [expandedStationId, setExpandedStationId] = useState<string | null>(null);
+  const [sources, setSources] = useState<any[]>([]);
+  const [isValidatingSources, setIsValidatingSources] = useState(false);
 
   useEffect(() => {
     const fetchStreams = async () => {
@@ -46,6 +48,73 @@ function App() {
     const interval = setInterval(fetchStreams, 30000);
     return () => clearInterval(interval);
   }, [station]);
+
+  useEffect(() => {
+    const validateSources = async () => {
+      // If we already have sources from the API, use them
+      if (currentStream?.sources && currentStream.sources.length > 0) {
+        setSources(currentStream.sources);
+        setIsValidatingSources(false);
+        return;
+      }
+
+      setIsValidatingSources(true);
+
+      // If we already have sources for this station and they aren't empty, 
+      // we might have already validated. 
+      if (sources.length > 0 && !currentStream?.sources?.length) {
+        setIsValidatingSources(false);
+        return;
+      }
+
+      const baseUrl = DEFAULT_BASE_URL.endsWith('/') ? DEFAULT_BASE_URL : `${DEFAULT_BASE_URL}/`;
+      const potentialSources = [
+        { label: '1080p', file: `${baseUrl}${station}-1080p.m3u8` },
+        { label: '720p', file: `${baseUrl}${station}-720p.m3u8` },
+        { label: '360p', file: `${baseUrl}${station}-360p.m3u8` },
+        { label: 'Direct', file: `${baseUrl}${station}.m3u8`, default: true }
+      ];
+
+      const validated = [];
+      for (const src of potentialSources) {
+        try {
+          // Step 1: Try a regular fetch to read status code (works if CORS is enabled)
+          const response = await fetch(src.file, { method: 'HEAD' });
+          if (response.ok) {
+            validated.push({
+              label: src.label,
+              type: 'hls' as const,
+              file: src.file,
+              default: src.default
+            });
+          } else if (response.status === 404) {
+            console.log(`[Validation] Source ${src.label} explicitly return 404 - skipping.`);
+          }
+        } catch (error) {
+          // Step 2: Fallback to no-cors if blocked by security policies
+          try {
+            const fallback = await fetch(src.file, { method: 'HEAD', mode: 'no-cors' });
+            if (fallback.type === 'opaque') {
+              console.log(`[Validation] Source ${src.label} blocked by CORS - using best-effort validation.`);
+              validated.push({
+                label: src.label,
+                type: 'hls' as const,
+                file: src.file,
+                default: src.default
+              });
+            }
+          } catch (fallbackError) {
+            console.warn(`[Validation] Full validation failure for ${src.label}:`, fallbackError);
+          }
+        }
+      }
+
+      setSources(validated);
+      setIsValidatingSources(false);
+    };
+
+    validateSources();
+  }, [station, currentStream]);
 
   useEffect(() => {
     if (isDark) {
@@ -286,10 +355,10 @@ function App() {
         <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
           <Player
             station={station}
-            isValidating={isLoading}
+            isValidating={isLoading || isValidatingSources}
             status={currentStream?.status ?? StreamStatus.Offline}
             witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
-            sources={currentStream?.sources || []}
+            sources={sources}
           />
         </div>
       </main>

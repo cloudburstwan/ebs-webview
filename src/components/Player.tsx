@@ -169,7 +169,12 @@ const Player: React.FC<PlayerProps> = ({ station, isValidating, status, witholdS
           </div>
         </div>
       ) : (
-        <div id="oven-player-container" ref={playerRef} className="w-full h-full" />
+        <div 
+          key={`${station}-${sources.map(s => s.file).join(',')}`}
+          id="oven-player-container" 
+          ref={playerRef} 
+          className="w-full h-full" 
+        />
       )}
     </div>
   );
