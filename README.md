@@ -21,7 +21,7 @@ A premium, high-performance HLS stream webview built with React, TypeScript, and
    ```
 2. Create or update `.env` file:
    ```env
-   VITE_STREAM_BASE_URL=https://stream.equestria.horse/s/
+   VITE_STREAM_BASE_URL=https://stream.equestria.horse
    ```
 3. Run the development server:
    ```bash
@@ -41,7 +41,7 @@ docker run -p 8080:80 ebs-webview
 ## Configuration
 
 The application uses environment variables for configuration:
-- `VITE_STREAM_BASE_URL`: The base URL for the HLS streams. Defaults to `https://stream.equestria.horse/s/`.
+- `VITE_STREAM_BASE_URL`: The base URL for EBS where all API and HLS streams are hosted. Defaults to `https://stream.equestria.horse`.
 
 ## URL Parameters
 

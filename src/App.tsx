@@ -169,7 +169,10 @@ function App() {
           {/* Station Selection Dropdown */}
           <div className="relative">
             <button
-              onClick={() => setIsStreamSelectionOpen(!isStreamSelectionOpen)}
+              onClick={() => {
+                setIsStreamSelectionOpen(!isStreamSelectionOpen);
+                setIsStatusOpen(false);
+              }}
               className={`theme-toggle flex items-center gap-2 px-4 transition-all duration-300 h-11 ${isStreamSelectionOpen ? 'bg-slate-200 dark:bg-white/10' : ''}`}
               title="Select Station"
             >
@@ -272,7 +275,10 @@ function App() {
           </div>
           <div className="relative">
             <button
-              onClick={() => setIsStatusOpen(!isStatusOpen)}
+              onClick={() => {
+                setIsStatusOpen(!isStatusOpen);
+                setIsStreamSelectionOpen(false);
+              }}
               className={`theme-toggle flex items-center gap-2 px-4 transition-all duration-300 h-11 ${isStatusOpen ? 'bg-slate-200 dark:bg-white/10' : ''}`}
               title="Stream Status"
             >
