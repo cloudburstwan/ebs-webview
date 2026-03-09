@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Player from './components/Player';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -64,11 +64,24 @@ function App() {
     setExpandedStationId(null);
   };
 
-  // Transform sources to mark the manually selected quality as default
-  const activeSources = sources.map(source => ({
-    ...source,
-    default: selectedQuality ? source.label === selectedQuality : source.default
-  }));
+  // Transform sources to mark the manually selected quality as default and move it to the front
+  // OvenPlayer prioritizes the first source in the list for initial playback
+  const activeSources = useMemo(() => {
+    const mapped = sources.map(source => ({
+      ...source,
+      default: selectedQuality ? source.label === selectedQuality : source.default
+    }));
+
+    if (selectedQuality) {
+      const selectedIndex = mapped.findIndex(s => s.label === selectedQuality);
+      if (selectedIndex !== -1) {
+        const [selected] = mapped.splice(selectedIndex, 1);
+        return [selected, ...mapped];
+      }
+    }
+
+    return mapped;
+  }, [sources, selectedQuality]);
 
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>

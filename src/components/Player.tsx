@@ -20,9 +20,10 @@ interface PlayerProps {
     type: 'hls' | 'webrtc' | 'dash';
     default?: boolean;
   }[];
+  selectedQuality?: string | null;
 }
 
-const Player = ({ station, isValidating, status, witholdStatus, sources }: PlayerProps) => {
+const Player = ({ station, isValidating, status, witholdStatus, sources, selectedQuality }: PlayerProps) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
   const [hasError, setHasError] = useState(false);
@@ -101,8 +102,14 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
       return;
     }
 
-    // Initial creation: Only if player doesn't exist, we have sources, it's live AND not withheld
     if (isLive && !isWithheld && sources.length > 0 && playerRef.current && !playerInstance.current) {
+      createPlayer();
+    }
+    
+    // Manual Quality Change: Force re-creation if selectedQuality changes
+    // This ensures OvenPlayer definitely switches to the new discrete HLS file
+    if (playerInstance.current && selectedQuality) {
+      console.log(`[Player] Manual quality change to ${selectedQuality}, forcing refresh`);
       createPlayer();
     }
     
@@ -110,7 +117,7 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
     return () => {
       // Note: We don't remove if just sources change (handled by effect below)
     };
-  }, [isLive, isWithheld, station, sources.length]); // Remove sources and isValidating from here
+  }, [isLive, isWithheld, station, sources.length, selectedQuality]); // Added selectedQuality
 
   // Efficient Source/Quality Switching
   useEffect(() => {
