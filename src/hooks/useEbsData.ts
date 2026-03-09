@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ebsApi } from '../utils/ebs';
+import { ebsApi, WithholdStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
 import { DEFAULT_STATION, SUPPORTED_QUALITIES, VALIDATE_SOURCES, STREAM_BASE_URL } from '../utils/env';
 
@@ -52,6 +52,20 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
     const abortController = new AbortController();
 
     const validateSources = async () => {
+      // Ensure we have the correct stream for the station before validating
+      // If we don't have it yet, or it belongs to a different station, wait for the next effect run
+      if (!currentStream || currentStream.name.toLowerCase() !== station.toLowerCase()) {
+        return;
+      }
+
+      // Prevent fetching or validating sources if the stream is withheld
+      if (currentStream.witholdStatus !== WithholdStatus.None) {
+        console.log(`[useEbsData] Stream ${station} is withheld, skipping source validation`);
+        if (sources.length > 0) setSources([]);
+        setIsValidatingSources(false);
+        return;
+      }
+
       const baseUrl = STREAM_BASE_URL.endsWith('/') ? STREAM_BASE_URL : `${STREAM_BASE_URL}/`;
 
       const potentialSources = [

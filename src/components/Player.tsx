@@ -39,7 +39,7 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
   }, [sources, station]);
 
   const createPlayer = () => {
-    if (!playerRef.current || sources.length === 0 || !isLive) return;
+    if (!playerRef.current || sources.length === 0 || !isLive || isWithheld) return;
 
     if (playerInstance.current) {
       playerInstance.current.remove();
@@ -93,8 +93,16 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
   };
 
   useEffect(() => {
-    // Initial creation: Only if player doesn't exist and we have a live station
-    if (isLive && sources.length > 0 && playerRef.current && !playerInstance.current) {
+    // If withheld or not live, and player exists, remove it
+    if ((isWithheld || !isLive) && playerInstance.current) {
+      console.log('[Player] Removing player due to withheld/offline status');
+      playerInstance.current.remove();
+      playerInstance.current = null;
+      return;
+    }
+
+    // Initial creation: Only if player doesn't exist, we have sources, it's live AND not withheld
+    if (isLive && !isWithheld && sources.length > 0 && playerRef.current && !playerInstance.current) {
       createPlayer();
     }
     
@@ -102,7 +110,7 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
     return () => {
       // Note: We don't remove if just sources change (handled by effect below)
     };
-  }, [isLive, station]); // Remove sources and isValidating from here
+  }, [isLive, isWithheld, station, sources.length]); // Remove sources and isValidating from here
 
   // Efficient Source/Quality Switching
   useEffect(() => {
