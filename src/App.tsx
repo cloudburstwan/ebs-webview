@@ -88,6 +88,7 @@ function App() {
             setRegion(r);
             setIsRegionOpen(false);
           }}
+          sources={sources}
         />
       </Header>
 

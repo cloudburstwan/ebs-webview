@@ -10,6 +10,7 @@ interface StatusDropdownProps {
   isRegionOpen: boolean;
   onRegionToggle: (e: React.MouseEvent) => void;
   onRegionSelect: (region: string) => void;
+  sources: any[];
 }
 
 const StatusDropdown = ({
@@ -19,7 +20,8 @@ const StatusDropdown = ({
   region,
   isRegionOpen,
   onRegionToggle,
-  onRegionSelect
+  onRegionSelect,
+  sources
 }: StatusDropdownProps) => {
   return (
     <div className="relative">
@@ -96,9 +98,30 @@ const StatusDropdown = ({
                     )}
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed italic pl-1">
-                  Quality is automatically optimized for your connection.
-                </p>
+                
+                {/* Qualities Section */}
+                {sources && sources.length > 0 && (
+                  <div className="flex flex-col gap-1.5 pt-2">
+                    <span className="text-[10px] font-bold uppercase text-slate-500/60 dark:text-slate-500 tracking-widest pl-1">Available Qualities</span>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {sources.map((source, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 ${
+                            source.default 
+                              ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' 
+                              : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold">{source.label}</span>
+                          {source.default && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-glow" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
