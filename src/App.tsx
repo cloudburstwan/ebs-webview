@@ -22,6 +22,7 @@ function App() {
   const [expandedStationId, setExpandedStationId] = useState<string | null>(null);
   const [region, setRegion] = useState('Default');
   const [isRegionOpen, setIsRegionOpen] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState<string | null>(null);
 
   const {
     isLoading,
@@ -41,20 +42,33 @@ function App() {
 
   const handleStationChange = (newStation: string) => {
     setStation(newStation);
+    setSelectedQuality(null); // Reset quality on station change
     const newParams = new URLSearchParams(window.location.search);
     newParams.set('station', newStation);
     window.history.pushState({}, '', `?${newParams.toString()}`);
     setIsStreamSelectionOpen(false);
   };
 
+  const handleSourceSelect = (label: string) => {
+    console.log(`[App] Switching stream to ${label}`);
+    setSelectedQuality(label);
+  };
+
   const handleHomeClick = () => {
     setStation(DEFAULT_STATION);
+    setSelectedQuality(null);
     const newParams = new URLSearchParams(window.location.search);
     newParams.delete('station');
     const newUrl = newParams.toString() ? `?${newParams.toString()}` : window.location.pathname;
     window.history.pushState({}, '', newUrl);
     setExpandedStationId(null);
   };
+
+  // Transform sources to mark the manually selected quality as default
+  const activeSources = sources.map(source => ({
+    ...source,
+    default: selectedQuality ? source.label === selectedQuality : source.default
+  }));
 
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
@@ -99,7 +113,8 @@ function App() {
             setRegion(r);
             setIsRegionOpen(false);
           }}
-          sources={sources}
+          sources={activeSources}
+          onSourceSelect={handleSourceSelect}
         />
       </Header>
 
@@ -110,7 +125,7 @@ function App() {
             isValidating={isLoading || isValidatingSources}
             status={currentStream?.status ?? StreamStatus.Offline}
             witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
-            sources={sources}
+            sources={activeSources}
           />
         </div>
       </main>

@@ -11,6 +11,7 @@ interface StatusDropdownProps {
   onRegionToggle: (e: React.MouseEvent) => void;
   onRegionSelect: (region: string) => void;
   sources: any[];
+  onSourceSelect: (label: string) => void;
 }
 
 const StatusDropdown = ({
@@ -21,7 +22,8 @@ const StatusDropdown = ({
   isRegionOpen,
   onRegionToggle,
   onRegionSelect,
-  sources
+  sources,
+  onSourceSelect
 }: StatusDropdownProps) => {
   return (
     <div className="relative">
@@ -105,19 +107,20 @@ const StatusDropdown = ({
                     <span className="text-[10px] font-bold uppercase text-slate-500/60 dark:text-slate-500 tracking-widest pl-1">Available Qualities</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       {sources.map((source, idx) => (
-                        <div
+                        <button
                           key={idx}
-                          className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 ${
+                          onClick={() => onSourceSelect(source.label)}
+                          className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                             source.default 
-                              ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' 
-                              : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400'
+                              ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400 font-bold' 
+                              : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20'
                           }`}
                         >
-                          <span className="text-[10px] font-bold">{source.label}</span>
+                          <span className="text-[10px] uppercase tracking-wider">{source.label}</span>
                           {source.default && (
                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse-glow" />
                           )}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
