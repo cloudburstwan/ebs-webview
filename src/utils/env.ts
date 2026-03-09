@@ -14,6 +14,7 @@ export const FILTER_STATIONS = import.meta.env.VITE_FILTER_STATIONS === 'true';
 
 export const DEFAULT_BASE_URL = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse';
 
-export const STREAM_BASE_URL = DEFAULT_BASE_URL + (import.meta.env.VITE_STREAM_SUFFIX || 's');
+const suffix = import.meta.env.VITE_STREAM_SUFFIX || 's';
+export const STREAM_BASE_URL = DEFAULT_BASE_URL.endsWith('/') ? DEFAULT_BASE_URL + suffix : DEFAULT_BASE_URL + '/' + suffix;
 
 export const API_VERSION = import.meta.env.VITE_API_VERSION || 'api/v1';

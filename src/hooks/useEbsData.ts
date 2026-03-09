@@ -17,16 +17,22 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
     const fetchStreams = async () => {
       setIsLoading(true);
       const streams = await ebsApi.getStreams(abortController.signal);
+      console.log("[useEbsData] Fetched streams:", streams);
       setAvailableStreams(streams);
 
       // Find stream matching station or default to first one if station not found
+      console.log("[useEbsData] Looking for station match:", station);
       const match = streams.find((s: StreamEntry) => s.name.toLowerCase() === station.toLowerCase());
+      
       if (match) {
+        console.log("[useEbsData] Match found:", match.name);
         setCurrentStream(match);
       } else if (streams.length > 0 && station === DEFAULT_STATION) {
+        console.log("[useEbsData] No match for default station, falling back to first stream:", streams[0].name);
         setCurrentStream(streams[0]);
         setStation(streams[0].name);
       } else {
+        console.log("[useEbsData] No match found for:", station);
         setCurrentStream(null);
       }
 
@@ -54,7 +60,7 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
           file: `${baseUrl}${station}-${q}.m3u8`,
           default: false
         })),
-        { label: 'Source', file: `${baseUrl}${station}.m3u8`, default: true }
+        { label: 'Source', type: 'hls' as const, file: `${baseUrl}${station}.m3u8`, default: true }
       ];
 
       if (VALIDATE_SOURCES) {
@@ -100,11 +106,26 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
         const validated = results.filter((r): r is NonNullable<typeof r> => r !== null);
 
         if (!abortController.signal.aborted) {
+          // Deep compare results to avoid redundant state updates which trigger player refreshes
+        const resultsChanged = validated.length !== sources.length || 
+          validated.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
+
+        if (resultsChanged) {
+          console.log(`[useEbsData] Sources changed for ${station}, updating state`);
           setSources(validated);
+        } else {
+          // console.log(`[useEbsData] Sources unchanged for ${station}, skipping update`);
+        }
           setIsValidatingSources(false);
         }
       } else {
-        setSources(potentialSources);
+        const potentialWithTypes = potentialSources.map(s => ({ ...s, type: 'hls' as const }));
+        const resultsChanged = potentialWithTypes.length !== sources.length ||
+          potentialWithTypes.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
+
+        if (resultsChanged) {
+          setSources(potentialWithTypes);
+        }
         setIsValidatingSources(false);
       }
       console.log("[useEbsData] Player Source : ", sources);

@@ -93,17 +93,35 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
   };
 
   useEffect(() => {
-    if (!isValidating && isLive && sources.length > 0 && playerRef.current) {
+    // Initial creation: Only if player doesn't exist and we have a live station
+    if (isLive && sources.length > 0 && playerRef.current && !playerInstance.current) {
       createPlayer();
     }
+    
+    // Cleanup on unmount or station change
+    return () => {
+      // Note: We don't remove if just sources change (handled by effect below)
+    };
+  }, [isLive, station]); // Remove sources and isValidating from here
 
+  // Efficient Source/Quality Switching
+  useEffect(() => {
+    if (playerInstance.current && isLive && sources.length > 0) {
+      console.log(`[Player] Updating sources via load() for ${station}`);
+      playerInstance.current.load(sources);
+    }
+  }, [sources]);
+
+  // Handle unmount specifically
+  useEffect(() => {
     return () => {
       if (playerInstance.current) {
+        console.log('[Player] Cleaning up OvenPlayer instance');
         playerInstance.current.remove();
         playerInstance.current = null;
       }
     };
-  }, [isValidating, isLive, sources, station]);
+  }, []);
 
   const getStatusLabel = () => {
     if (isWithheld) return 'Withheld';
@@ -126,25 +144,34 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
   };
 
   return (
-    <div className="player-frame group relative" role="application" aria-label={`Video player for ${station}`}>
-      {/* Status Badge */}
-      {!isValidating && (
-        <div className={`status-badge ${(isLive && !hasError) ? 'badge-live' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}>
-          <span className={`status-dot ${(isLive && !hasError) ? 'animate-pulse-glow' : (isStarting ? 'bg-amber-500 animate-pulse' : '')}`}></span>
-          {getStatusLabel()}
-        </div>
-      )}
+    <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${station}`}>
+      {/* Layer 1: The Player Instance (Background) */}
+      <div className="absolute inset-0 z-0 bg-black">
+        <div 
+          id="oven-player-container" 
+          ref={playerRef} 
+          className={`w-full h-full transition-opacity duration-500 ${(!isValidating && isLive && !hasError && !isWithheld) ? 'opacity-100 flex' : 'opacity-0'}`}
+        />
+      </div>
 
-      {isValidating ? (
-        <div className="w-full h-full flex items-center justify-center bg-slate-200/20 dark:bg-black/40 rounded-xl">
+      {/* Layer 2: UI Overlay Layer (Foreground) */}
+      <div className={`absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center transition-colors duration-300 ${(!isLive || hasError || isWithheld || isValidating) ? 'bg-slate-200/20 dark:bg-black/40' : ''}`}>
+        
+        {/* Status Badge (Stays in top-right) */}
+        {!isValidating && (
+          <div className={`absolute top-4 right-4 z-20 pointer-events-auto status-badge ${(isLive && !hasError) ? 'badge-live' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}>
+            <span className={`status-dot ${(isLive && !hasError) ? 'animate-pulse-glow' : (isStarting ? 'bg-amber-500 animate-pulse' : '')}`}></span>
+            {getStatusLabel()}
+          </div>
+        )}
+
+        {isValidating ? (
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-slate-400/20 border-t-teal-500 rounded-full animate-spin"></div>
             <p className="text-slate-600 dark:text-white/60 font-medium animate-pulse">Initializing Stream...</p>
           </div>
-        </div>
-      ) : (!isLive || hasError || isWithheld) ? (
-        <div className="w-full h-full flex items-center justify-center bg-slate-200/20 dark:bg-black/40 rounded-xl">
-          <div className="text-center px-6">
+        ) : (!isLive || hasError || isWithheld) ? (
+          <div className="text-center px-6 pointer-events-auto">
             <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border ${isStarting ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
               <svg className={`w-10 h-10 ${isStarting ? 'text-amber-500' : 'text-rose-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -167,15 +194,8 @@ const Player = ({ station, isValidating, status, witholdStatus, sources }: Playe
               </button>
             )}
           </div>
-        </div>
-      ) : (
-        <div 
-          key={`${station}-${sources.map(s => s.file).join(',')}`}
-          id="oven-player-container" 
-          ref={playerRef} 
-          className="w-full h-full" 
-        />
-      )}
+        ) : null}
+      </div>
     </div>
   );
 };
