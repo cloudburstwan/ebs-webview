@@ -1,6 +1,7 @@
 import { Radio, ChevronDown, Activity } from 'lucide-react';
 import { StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
+import { FILTER_STATIONS } from '../utils/env';
 
 interface StationDropdownProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ const StationDropdown = ({
             <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
               {availableStreams.length > 0 ? (
                 availableStreams
-                  .filter(s => (s.witholdStatus ?? 0) === 0)
+                  .filter(s => !FILTER_STATIONS || (s.witholdStatus ?? 0) === 0)
                   .map((s) => (
                     <div key={s.id} className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
@@ -85,7 +86,7 @@ const StationDropdown = ({
                         </button>
                       </div>
 
-                      {expandedStationId === s.id && s.dates && (
+                      {expandedStationId === s.id && (
                         <div className="mx-2 p-3 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 space-y-2 animate-fade-in-slide-down">
                           <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-200 dark:border-white/5">
                             <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -96,32 +97,39 @@ const StationDropdown = ({
                               {s.status === StreamStatus.Live ? 'Online' : 'Offline'}
                             </span>
                           </div>
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                              <span>Stream Period</span>
-                              <Activity className="w-3 h-3" />
-                            </div>
-                            <div className="grid grid-cols-1 gap-2">
-                              <div className="flex flex-col">
-                                <span className="text-[9px] text-slate-400 uppercase font-medium">Starts</span>
-                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  {new Date(s.dates.startAt).toLocaleString(undefined, {
-                                    dateStyle: 'medium',
-                                    timeStyle: 'short'
-                                  })}
-                                </span>
+                          
+                          {s.dates ? (
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                <span>Stream Period</span>
+                                <Activity className="w-3 h-3" />
                               </div>
-                              <div className="flex flex-col">
-                                <span className="text-[9px] text-slate-400 uppercase font-medium">Ends</span>
-                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  {new Date(s.dates.endAt).toLocaleString(undefined, {
-                                    dateStyle: 'medium',
-                                    timeStyle: 'short'
-                                  })}
-                                </span>
+                              <div className="grid grid-cols-1 gap-2">
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] text-slate-400 uppercase font-medium">Starts</span>
+                                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                    {s.dates.startAt ? new Date(s.dates.startAt).toLocaleString(undefined, {
+                                      dateStyle: 'medium',
+                                      timeStyle: 'short'
+                                    }) : 'Unknown'}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] text-slate-400 uppercase font-medium">Ends</span>
+                                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                    {s.dates.endAt ? new Date(s.dates.endAt).toLocaleString(undefined, {
+                                      dateStyle: 'medium',
+                                      timeStyle: 'short'
+                                    }) : 'Unknown'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="py-1 text-center">
+                              <span className="text-[10px] text-slate-400 italic">No schedule data available</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

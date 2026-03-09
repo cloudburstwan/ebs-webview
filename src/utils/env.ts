@@ -10,6 +10,7 @@ export const SUPPORTED_QUALITIES = import.meta.env.VITE_SUPPORTED_QUALITIES
   : ['360p', '720p'];
 
 export const VALIDATE_SOURCES = import.meta.env.VITE_VALIDATE_SOURCES === 'true' || false;
+export const FILTER_STATIONS = import.meta.env.VITE_FILTER_STATIONS === 'true';
 
 export const DEFAULT_BASE_URL = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse';
 
