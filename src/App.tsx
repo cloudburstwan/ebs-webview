@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Moon, Sun, Activity, Lightbulb, ChevronDown, RectangleHorizontal, Radio } from 'lucide-react';
 import Player from './components/Player';
-import { ebsApi, StreamStatus, WithholdStatus, DEFAULT_BASE_URL } from './utils/ebs';
+import { ebsApi, StreamStatus, WithholdStatus, STREAM_BASE_URL } from './utils/ebs';
 import type { StreamEntry } from './utils/ebs';
 
 function App() {
@@ -67,7 +67,7 @@ function App() {
         return;
       }
 
-      const baseUrl = DEFAULT_BASE_URL.endsWith('/') ? DEFAULT_BASE_URL : `${DEFAULT_BASE_URL}/`;
+      const baseUrl = STREAM_BASE_URL.endsWith('/') ? STREAM_BASE_URL : `${STREAM_BASE_URL}/`;
       const potentialSources = [
         { label: '1080p', file: `${baseUrl}${station}-1080p.m3u8` },
         { label: '720p', file: `${baseUrl}${station}-720p.m3u8` },
@@ -164,7 +164,7 @@ function App() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 relative flex-shrink-0">
           {/* Station Selection Dropdown */}
           <div className="relative">
@@ -227,7 +227,7 @@ function App() {
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedStationId === s.id ? 'rotate-180' : ''}`} />
                               </button>
                             </div>
-                            
+
                             {expandedStationId === s.id && s.dates && (
                               <div className="mx-2 p-3 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 space-y-2 animate-fade-in-slide-down">
                                 <div className="flex flex-col gap-1.5">
@@ -239,18 +239,18 @@ function App() {
                                     <div className="flex flex-col">
                                       <span className="text-[9px] text-slate-400 uppercase font-medium">Starts</span>
                                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                        {new Date(s.dates.startAt).toLocaleString(undefined, { 
-                                          dateStyle: 'medium', 
-                                          timeStyle: 'short' 
+                                        {new Date(s.dates.startAt).toLocaleString(undefined, {
+                                          dateStyle: 'medium',
+                                          timeStyle: 'short'
                                         })}
                                       </span>
                                     </div>
                                     <div className="flex flex-col">
                                       <span className="text-[9px] text-slate-400 uppercase font-medium">Ends</span>
                                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                        {new Date(s.dates.endAt).toLocaleString(undefined, { 
-                                          dateStyle: 'medium', 
-                                          timeStyle: 'short' 
+                                        {new Date(s.dates.endAt).toLocaleString(undefined, {
+                                          dateStyle: 'medium',
+                                          timeStyle: 'short'
                                         })}
                                       </span>
                                     </div>
