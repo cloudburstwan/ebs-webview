@@ -20,12 +20,12 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       setAvailableStreams(streams);
 
       // Find stream matching station or default to first one if station not found
-      const match = streams.find((s: StreamEntry) => s.station.toLowerCase() === station.toLowerCase());
+      const match = streams.find((s: StreamEntry) => s.name.toLowerCase() === station.toLowerCase());
       if (match) {
         setCurrentStream(match);
       } else if (streams.length > 0 && station === DEFAULT_STATION) {
         setCurrentStream(streams[0]);
-        setStation(streams[0].station);
+        setStation(streams[0].name);
       } else {
         setCurrentStream(null);
       }
@@ -46,12 +46,6 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
     const abortController = new AbortController();
 
     const validateSources = async () => {
-      if (currentStream?.sources && currentStream.sources.length > 0) {
-        setSources(currentStream.sources);
-        setIsValidatingSources(false);
-        return;
-      }
-
       const baseUrl = STREAM_BASE_URL.endsWith('/') ? STREAM_BASE_URL : `${STREAM_BASE_URL}/`;
 
       const potentialSources = [

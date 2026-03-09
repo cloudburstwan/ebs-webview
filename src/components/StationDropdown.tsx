@@ -50,8 +50,8 @@ const StationDropdown = ({
                     <div key={s.id} className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => onStationChange(s.station)}
-                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.station === currentStation
+                          onClick={() => onStationChange(s.name)}
+                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.name === currentStation
                             ? 'bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400'
                             : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400'
                             }`}

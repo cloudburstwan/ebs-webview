@@ -28,13 +28,6 @@ export interface StreamEntry {
     status: StreamStatus;
     witholdStatus: WithholdStatus; // API typo support
     viewers?: number;
-    station: string;
-    sources: {
-        label: string;
-        file: string;
-        type: 'hls' | 'webrtc' | 'dash';
-        default?: boolean;
-    }[];
     dates?: {
         startAt: string;
         endAt: string;
@@ -76,9 +69,7 @@ export class EBSApi {
             return data.map((s: any) => ({
                 ...s,
                 name: s.name || 'Unknown',
-                station: s.station || s.name || 'Unknown',
-                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? s.withhold : WithholdStatus.None),
-                sources: s.sources || []
+                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? s.withhold : WithholdStatus.None)
             }));
         } catch (error) {
             console.error('[EBSApi] getStreams error:', error);
