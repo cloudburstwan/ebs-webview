@@ -4,7 +4,7 @@
 @theme {
   --color-premium-light: #f8fafc;
   --color-premium-dark: #0f172a;
-  --color-premium-accent: #6366f1;
+  --color-premium-accent: #14b8a6;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -41,15 +41,19 @@ body {
 }
 
 @utility app-root {
-  @apply min-h-screen flex flex-col p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-[#0f172a] transition-colors duration-500;
+  @apply min-h-screen flex flex-col p-4 md:p-8 bg-slate-50 dark:bg-[#0f172a] transition-colors duration-500;
 }
 
 @utility premium-header {
-  @apply flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl glass relative z-[100];
+  @apply flex items-center justify-between px-6 py-2 h-20 min-h-[5rem] max-h-20 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-2xl glass relative z-[100] overflow-visible flex-none mb-6;
 }
 
 @utility premium-logo-box {
-  @apply p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg shadow-indigo-500/30 dark:shadow-indigo-500/50 shadow-lg;
+  @apply p-1.5 bg-teal-600 dark:bg-teal-500 rounded-lg shadow-teal-500/30 dark:shadow-teal-500/50 shadow-lg drop-shadow-[0_0_8px_rgba(20,184,166,0.3)] transition-all duration-300;
+
+  &:hover {
+    @apply scale-105 drop-shadow-[0_0_12px_rgba(20,184,166,0.5)];
+  }
 }
 
 @utility status-indicator {
@@ -58,7 +62,7 @@ body {
 
 @utility theme-toggle {
   @apply p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 transition-all duration-300 shadow-inner;
-  
+
   &:hover {
     @apply bg-slate-200 dark:bg-white/10;
 
@@ -71,7 +75,8 @@ body {
     }
   }
 
-  .icon-sun, .icon-moon {
+  .icon-sun,
+  .icon-moon {
     @apply transition-transform;
   }
 }
@@ -82,28 +87,31 @@ body {
 
 @utility info-badge {
   @apply px-4 py-2 rounded-lg font-medium text-sm;
-  
-  &.info-indigo {
-    @apply bg-indigo-500/10 border border-indigo-500/20 text-indigo-400;
+
+  &.info-teal {
+    @apply bg-teal-500/10 border border-teal-500/20 text-teal-400;
   }
-  
+
   &.info-emerald {
     @apply bg-emerald-500/10 border border-emerald-500/20 text-emerald-400;
   }
 }
 
 @utility premium-footer {
-  @apply text-center text-slate-400 dark:text-slate-500 text-sm py-4 border-t border-slate-200 dark:border-white/5;
+  @apply text-center text-slate-400 dark:text-slate-500 text-sm py-4 border-t border-slate-200 dark:border-white/5 flex-none;
 }
+
 @utility theater-mode {
   @apply max-w-none w-full px-0 md:px-0 py-0 md:py-0 space-y-0 transition-all duration-500 ease-in-out;
-  
+
   & .premium-header {
     @apply sticky top-0 bg-transparent backdrop-blur-md border-b border-white/10 z-[100];
   }
+
   & .player-frame {
     @apply max-w-none w-full h-[calc(100vh-4rem)] rounded-none border-none shadow-none;
   }
+
   & .premium-footer {
     @apply hidden;
   }
@@ -123,6 +131,7 @@ body {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -131,15 +140,16 @@ body {
 
 @utility bulb-icon {
   @apply transition-all duration-500 drop-shadow-[0_0_8px_rgba(0,0,0,0)];
-  
+
   &.active {
     @apply text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)];
-    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+    filter: drop-shadow(0 0 8px rgba(251,191,36,0.4));
   }
 }
 
 @utility badge-live {
   @apply bg-emerald-500/20 text-emerald-400 border-emerald-500/30;
+
   & .status-dot {
     @apply w-2 h-2 rounded-full bg-emerald-500;
   }
@@ -147,15 +157,27 @@ body {
 
 @utility badge-offline {
   @apply bg-rose-500/20 text-rose-400 border-rose-500/30;
+
   & .status-dot {
     @apply w-2 h-2 rounded-full bg-rose-500;
   }
 }
 
 @keyframes pulse-glow {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
 .animate-pulse-glow {
