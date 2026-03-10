@@ -260,10 +260,22 @@ body {
   display: none;
 }
 
-/* Fix for black bars on player edges in light mode */
+/* Aggressive fix for black bars and clipping */
 .ovenplayer, 
 .op-player, 
 .op-media-container,
-.op-video-container {
+.op-video-container,
+.op-media-element-container {
   background-color: transparent !important;
+  background-image: none !important;
+  box-sizing: border-box !important;
+}
+
+.ovenplayer video {
+  background-color: transparent !important;
+  object-fit: cover !important; /* Prevent internal black bars */
+}
+
+.op-ui {
+  background: transparent !important;
 }
