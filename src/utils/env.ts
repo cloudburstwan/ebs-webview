@@ -20,3 +20,6 @@ const suffix = import.meta.env.VITE_STREAM_SUFFIX || 's';
 export const STREAM_BASE_URL = DEFAULT_BASE_URL.endsWith('/') ? DEFAULT_BASE_URL + suffix : DEFAULT_BASE_URL + '/' + suffix;
 
 export const API_VERSION = import.meta.env.VITE_API_VERSION || 'api/v1';
+
+export const PLAYER_MAX_LIVE_SYNC_PLAYBACK_RATE = parseFloat(import.meta.env.VITE_PLAYER_MAX_LIVE_SYNC_PLAYBACK_RATE || '1.0');
+export const PLAYER_LIVE_SYNC_DURATION = parseInt(import.meta.env.VITE_PLAYER_LIVE_SYNC_DURATION || '6', 10);

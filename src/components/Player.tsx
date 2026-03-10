@@ -8,6 +8,7 @@ if (typeof window !== 'undefined') {
 }
 
 import { StreamStatus, WithholdStatus } from '../utils/ebs';
+import { PLAYER_MAX_LIVE_SYNC_PLAYBACK_RATE, PLAYER_LIVE_SYNC_DURATION } from '../utils/env';
 
 interface PlayerProps {
   stream: string;
@@ -57,9 +58,9 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       sources: sources,
       preload: 'auto',
       hlsConfig: {
-        liveSyncDuration: 6,
-        liveMaxLatencyDuration: 12,
-        maxLiveSyncPlaybackRate: 1.5,
+        liveSyncDuration: PLAYER_LIVE_SYNC_DURATION,
+        liveMaxLatencyDuration: PLAYER_LIVE_SYNC_DURATION * 2,
+        maxLiveSyncPlaybackRate: PLAYER_MAX_LIVE_SYNC_PLAYBACK_RATE,
         enableWorker: true,
         lowLatencyMode: true
       }
@@ -174,7 +175,16 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
         
         {/* Status Badge (Stays in top-right) */}
         {!isValidating && (
-          <div className={`absolute top-4 right-4 z-20 pointer-events-auto status-badge ${(isLive && !hasError) ? 'badge-live' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}>
+          <div 
+            className={`absolute top-4 right-4 z-20 pointer-events-auto status-badge cursor-pointer ${(isLive && !hasError) ? 'badge-live active:scale-95 transition-transform' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
+            onClick={() => {
+              if (isLive && !hasError && playerInstance.current) {
+                const duration = playerInstance.current.getDuration();
+                playerInstance.current.seek(duration);
+              }
+            }}
+            title={isLive ? "Click to sync to live edge" : undefined}
+          >
             <span className={`status-dot ${(isLive && !hasError) ? 'animate-pulse-glow' : (isStarting ? 'bg-amber-500 animate-pulse' : '')}`}></span>
             {getStatusLabel()}
           </div>
