@@ -95,17 +95,16 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
         if (rightControls && !container.querySelector('.live-holder')) {
           const liveHolder = document.createElement('div');
           liveHolder.className = 'live-holder op-navigators op-clear';
-          
+
           const button = document.createElement('button');
           button.className = 'op-button op-live-button';
           button.title = 'Go Live';
           button.setAttribute('aria-label', 'Go Live');
           // Radio/Live-like icon
           button.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M9 12a3 3 0 0 1 6 0"/><circle cx="12" cy="12" r="1"/></svg>
             <span class="op-live-text">Go Live</span>
           `;
-          
+
           button.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -115,7 +114,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
               playerInstance.current.seek(duration);
             }
           };
-          
+
           liveHolder.appendChild(button);
           // Insert at the beginning of right controls (next to settings)
           rightControls.insertBefore(liveHolder, rightControls.firstChild);
