@@ -84,7 +84,7 @@ const StatusDropdown = ({
                     </button>
 
                     {isRegionOpen && (
-                      <div className="absolute bottom-full left-0 right-0 mb-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-[110] animate-fade-in-slide-up">
+                      <div className="absolute bottom-full left-0 right-0 mb-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-[110] animate-fade-in-slide-up max-h-48 overflow-y-auto custom-scrollbar">
                         <button
                           onClick={() => onRegionSelect('Default')}
                           className="w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
