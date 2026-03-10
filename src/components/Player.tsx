@@ -54,6 +54,16 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     setRetryCount(0);
   }, [sources, stream]);
 
+  const togglePlayPause = () => {
+    if (!playerInstance.current) return;
+    const state = playerInstance.current.getState();
+    if (state === 'playing') {
+      playerInstance.current.pause();
+    } else {
+      playerInstance.current.play();
+    }
+  };
+
   const createPlayer = () => {
     if (!playerRef.current || sources.length === 0 || !isLive || isWithheld) return;
 
@@ -226,11 +236,21 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       {/* Layer 2: UI Overlay Layer (Foreground) */}
       <div className={`absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center transition-colors duration-300 ${(!isLive || hasError || isWithheld || isValidating) ? 'bg-slate-200/20 dark:bg-black/40' : ''}`}>
         
+        {/* Click-to-Play/Pause Overlay (Center area, avoids controls and badges) */}
+        {isLive && !hasError && !isWithheld && !isValidating && (
+          <div 
+            className="absolute inset-x-0 top-16 bottom-20 z-10 pointer-events-auto cursor-pointer" 
+            onClick={togglePlayPause}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Status Badge (Stays in top-right) */}
         {!isValidating && (
           <div 
-            className={`absolute top-4 right-4 z-20 pointer-events-auto status-badge cursor-pointer ${(isLive && !hasError) ? 'badge-live active:scale-95 transition-transform' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
-            onClick={() => {
+            className={`absolute top-4 right-4 z-50 pointer-events-auto status-badge cursor-pointer ${(isLive && !hasError) ? 'badge-live active:scale-95 transition-transform' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
+            onClick={(e) => {
+              e.stopPropagation();
               if (isLive && !hasError && playerInstance.current) {
                 const duration = playerInstance.current.getDuration();
                 playerInstance.current.seek(duration);
