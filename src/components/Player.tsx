@@ -119,6 +119,11 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
           // Insert at the beginning of right controls (next to settings)
           rightControls.insertBefore(liveHolder, rightControls.firstChild);
         }
+
+        const playerContainer = document.getElementById('player-container');
+        if (playerContainer) {
+          playerContainer.classList.remove('player-hidden');
+        }
       }
 
       // Sync initial volume and mute from persistent state
@@ -153,6 +158,11 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       console.error('[Player] OvenPlayer error:', error);
       setHasError(true);
 
+      const playerContainer = document.getElementById('player-container');
+      if (playerContainer) {
+        playerContainer.classList.add('player-hidden');
+      }
+
       // Auto-refresh logic: Try to re-create player on error up to 3 times
       if (retryCount < 3) {
         console.log(`[Player] Attempting reconnection (${retryCount + 1}/3)...`);
@@ -175,11 +185,15 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   // Primary Player Lifecycle Effect
   useEffect(() => {
     // 1. Determine if we should have a player
-    const shouldExist = isLive && !isWithheld && sources.length > 0 && playerRef.current;
+    const shouldExist = isLive && !isWithheld && !hasError && sources.length > 0 && playerRef.current;
 
     if (!shouldExist) {
       if (playerInstance.current) {
         console.log('[Player] Removing player instance (not needed)');
+        const playerContainer = document.getElementById('player-container');
+        if (playerContainer) {
+          playerContainer.classList.add('player-hidden');
+        }
         playerInstance.current.remove();
         playerInstance.current = null;
       }
@@ -213,7 +227,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     return () => {
       // Cleanup is handled by the next effect run or unmount
     };
-  }, [isLive, isWithheld, stream, sources.length, selectedQuality, volume]);
+  }, [isLive, isWithheld, hasError, stream, sources.length, selectedQuality, volume]);
 
   // Specific cleanup on unmount
   useEffect(() => {
@@ -227,6 +241,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   }, []);
 
   const getStatusLabel = () => {
+    if (hasError) return 'Error'
     if (isWithheld) return 'Withheld';
     if (isLive) return 'Live';
     if (isStarting) return 'Starting';
@@ -249,11 +264,11 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   return (
     <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${stream}`}>
       {/* Layer 1: The Player Instance (Background) */}
-      <div className="absolute inset-0 z-0 bg-black">
+      <div id="player-container" className="player-hidden absolute inset-0 z-0 bg-black">
         <div
           id="oven-player-container"
           ref={playerRef}
-          className={`w-full h-full transition-opacity duration-500 ${(!isValidating && isLive && !hasError && !isWithheld) ? 'opacity-100 flex' : 'opacity-0'}`}
+          className={`w-full h-full transition-opacity duration-500 ${(!hasError && !isValidating && isLive && !isWithheld) ? 'opacity-100 flex' : 'opacity-0'}`}
         />
       </div>
 
@@ -263,7 +278,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
         {/* Status Badge (Stays in top-right) */}
         {!isValidating && (
           <div
-            className={`absolute top-4 right-4 z-50 pointer-events-auto status-badge cursor-pointer ${(isLive && !hasError) ? 'badge-live active:scale-95 transition-transform' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
+            className={`absolute top-4 right-4 z-50 pointer-events-auto status-badge cursor-pointer ${(isLive && !hasError) ? 'badge-live active:scale-95 transition-transform' : ((isStarting && !hasError) ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
             onClick={(e) => {
               e.stopPropagation();
               if (isLive && !hasError && playerInstance.current) {
