@@ -359,7 +359,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   return (
     <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${stream}`}>
       {/* Layer 1: The Player Instance (Background) */}
-      <div id="player-container" className={`${!showPlayer ? 'player-hidden' : ''} absolute inset-0 z-0 bg-black`}>
+      <div id="player-container" className={`${!showPlayer ? 'player-hidden' : ''} absolute inset-0 z-0 bg-transparent`}>
         <div
           id="oven-player-container"
           ref={playerRef}

@@ -259,3 +259,11 @@ body {
 .player-hidden {
   display: none;
 }
+
+/* Fix for black bars on player edges in light mode */
+.ovenplayer, 
+.op-player, 
+.op-media-container,
+.op-video-container {
+  background-color: transparent !important;
+}
