@@ -71,7 +71,8 @@ export class EBSApi {
                 name: s.name || 'Unknown',
                 witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? s.withhold : WithholdStatus.None)
             }));
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === 'AbortError') return [];
             console.error('[EBSApi] getStreams error:', error);
             return [];
         }
@@ -84,7 +85,8 @@ export class EBSApi {
                 throw new Error(`Failed to fetch status: ${response.statusText}`);
             }
             return await response.json();
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === 'AbortError') return null;
             console.error('[EBSApi] getStatus error:', error);
             return null;
         }
@@ -93,8 +95,8 @@ export class EBSApi {
     /**
      * Helper to filter only live streams
      */
-    async getLiveStreams(): Promise<StreamEntry[]> {
-        const all = await this.getStreams();
+    async getLiveStreams(signal?: AbortSignal): Promise<StreamEntry[]> {
+        const all = await this.getStreams(signal);
         return all.filter(s => s.status === StreamStatus.Live);
     }
 }
