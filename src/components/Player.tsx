@@ -65,24 +65,24 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   // Initial State, Stream Switching, and Status Transitions
   useEffect(() => {
     const isReadyForPlayback = isLive && !isWithheld;
-    
+
     // 1. Reset on stream change
     if (lastStreamRef.current !== stream) {
-      console.log(`[Player] Stream changed from ${lastStreamRef.current} to ${stream}. Resetting to READY.`);
+      console.log(`[Player] State: Stream changed from ${lastStreamRef.current} to ${stream}. Resetting to READY.`);
       lastStreamRef.current = stream;
       destroyPlayer(); // Immediately stop old stream
       setPlayerState(PlayerState.READY);
       setRetryCount(0);
       setErrorDetails(null);
-    } 
+    }
     // 2. Initial setup
     else if (playerState === PlayerState.NEW) {
       setPlayerState(PlayerState.READY);
     }
     // 3. Reset if status becomes non-live or withheld while in an active state
-    else if (!isReadyForPlayback && 
-             playerState !== PlayerState.READY) {
-      console.log(`[Player] Status transition: isLive=${isLive}, isWithheld=${isWithheld}. Resetting to READY.`);
+    else if (!isReadyForPlayback &&
+      playerState !== PlayerState.READY) {
+      console.log(`[Player] State: Status transition: isLive=${isLive}, isWithheld=${isWithheld}. Resetting to READY.`);
       destroyPlayer();
       setPlayerState(PlayerState.READY);
       setRetryCount(0);
@@ -102,16 +102,16 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
 
   const validateSources = async (): Promise<boolean> => {
     console.log(`[Player] Validating ${sources.length} sources...`);
-    
+
     // We try to validate at least the first source (usually the default)
     // or any source marked as default.
-    const sourcesToValidate = sources.filter(s => s.default).length > 0 
-      ? sources.filter(s => s.default) 
+    const sourcesToValidate = sources.filter(s => s.default).length > 0
+      ? sources.filter(s => s.default)
       : [sources[0]];
 
     for (const source of sourcesToValidate) {
       try {
-        const response = await fetch(source.file, { 
+        const response = await fetch(source.file, {
           method: 'HEAD',
           cache: 'no-cache',
           redirect: 'follow'
@@ -147,7 +147,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     destroyPlayer();
 
     const displayStream = stream.charAt(0).toUpperCase() + stream.slice(1);
-    console.log(`[Player] Creating OvenPlayer for ${stream} with ${sources.length} sources (State: SETUP)`);
+    console.log(`[Player] State: SETUP -> Creating OvenPlayer for ${stream} with ${sources.length} sources`);
 
     const instance = OvenPlayer.create('oven-player-container', {
       title: `EBS - ${displayStream}`,
@@ -172,7 +172,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     }
 
     instance.on('ready', () => {
-      console.log('[Player] OvenPlayer Ready -> CONTENT_AVAILABLE');
+      console.log('[Player] State: OvenPlayer READY -> CONTENT_AVAILABLE');
       setPlayerState(PlayerState.CONTENT_AVAILABLE);
       setRetryCount(0);
       setErrorDetails(null);
@@ -205,31 +205,33 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     });
 
     instance.on('play', () => {
-      console.log('[Player] State -> PLAYING');
+      console.log('[Player] State: -> PLAYING');
       setPlayerState(PlayerState.PLAYING);
     });
 
-    instance.on('volume', (data: any) => {
+    instance.on('volumeChanged', (data: any) => {
+      console.log('[Player] Volume Changed:', data.volume);
       if (typeof data.volume === 'number' && onVolumeChangeRef.current) {
         onVolumeChangeRef.current(data.volume);
       }
     });
 
     instance.on('mute', (data: any) => {
+      console.log('[Player] Mute:', data.mute);
       if (typeof data.mute === 'boolean' && onMuteChangeRef.current) {
         onMuteChangeRef.current(data.mute);
       }
     });
 
     instance.on('error', (error: any) => {
-      console.error('[Player] OvenPlayer error:', error);
+      console.error('[Player] OvenPlayer ERROR:', error);
       setErrorDetails(error?.message || 'Unknown player error');
       setPlayerState(PlayerState.ERROR);
     });
 
     instance.on('buffer', (info: any) => {
       if (info.type === 'stale') {
-        console.warn('[Player] Stale buffer detected, attempting reset');
+        console.warn('[Player] State: Stale buffer detected, attempting reset');
         setPlayerState(PlayerState.READY);
       }
     });
@@ -243,7 +245,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       switch (playerState) {
         case PlayerState.READY:
           if (isLive && !isWithheld && sources.length > 0) {
-            console.log('[Player] READY -> VALIDATING_SOURCES');
+            console.log('[Player] State: READY -> VALIDATING_SOURCES');
             setPlayerState(PlayerState.VALIDATING_SOURCES);
           }
           break;
@@ -251,25 +253,25 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
         case PlayerState.VALIDATING_SOURCES:
           const isValid = await validateSources();
           if (isValid) {
-            console.log('[Player] Validation passed -> SETUP');
+            console.log('[Player] State: VALIDATING_SOURCES Passed -> SETUP');
             createPlayer();
           } else {
-            console.error('[Player] All primary sources failed validation');
+            console.error('[Player] State: VALIDATING_SOURCES Failed -> ERROR');
             setPlayerState(PlayerState.ERROR);
           }
           break;
 
         case PlayerState.ERROR:
           if (retryCount < 3) {
-            console.log(`[Player] ERROR -> Waiting to Reconnect (Count: ${retryCount + 1}/3)`);
+            console.log(`[Player] State: ERROR -> Waiting to Reconnect (Count: ${retryCount + 1}/3)`);
             timeoutId = setTimeout(() => {
               setRetryCount(prev => prev + 1);
               setPlayerState(PlayerState.RECONNECTING);
             }, 3000);
           } else {
-            console.log('[Player] ERROR (Persistent) -> Waiting 30s to Refresh');
+            console.log('[Player] State: ERROR (Persistent) -> Waiting 30s to Refresh');
             timeoutId = setTimeout(() => {
-              console.log('[Player] 30s timeout reached. Resetting retry count and attempting READY.');
+              console.log('[Player] State: 30s timeout reached. Resetting retry count and attempting READY.');
               refetch(); // Ensure fresh stream data before retry
               setRetryCount(0);
               setPlayerState(PlayerState.READY);
@@ -278,7 +280,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
           break;
 
         case PlayerState.RECONNECTING:
-          console.log('[Player] RECONNECTING -> READY');
+          console.log('[Player] State: RECONNECTING -> READY');
           setPlayerState(PlayerState.READY);
           break;
 
@@ -347,6 +349,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       return `The connection was lost. Reconnecting... (Attempt ${retryCount + 1}/3)`;
     }
     if (playerState === PlayerState.VALIDATING_SOURCES) return "Checking source availability...";
+    if (playerState === PlayerState.READY || playerState === PlayerState.SETUP) return "Preparing the player...";
     return "This stream is currently offline or does not exist.";
   };
 
@@ -402,7 +405,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
               )}
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              {playerState === PlayerState.ERROR ? 'Connection Lost' : (playerState === PlayerState.RECONNECTING ? 'Reconnecting' : (isWithheld ? 'Stream Withheld' : (isStarting ? 'Starting Soon' : 'Stream Unavailable')))}
+              {playerState === PlayerState.ERROR ? 'Connection Lost' : (playerState === PlayerState.RECONNECTING ? 'Reconnecting' : (isWithheld ? 'Stream Withheld' : (isStarting ? 'Starting Soon' : ((playerState === PlayerState.READY || playerState === PlayerState.SETUP || playerState === PlayerState.VALIDATING_SOURCES) ? 'Player Loading' : 'Stream Unavailable'))))}
             </h3>
             <p className="text-slate-500 dark:text-white/60 max-w-sm mx-auto">
               {getErrorMessage()}
