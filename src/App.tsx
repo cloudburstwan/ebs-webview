@@ -2,24 +2,24 @@ import { useState, useEffect, useMemo } from 'react';
 import Player from './components/Player';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import StationDropdown from './components/StationDropdown';
+import StreamDropdown from './components/StreamDropdown';
 import StatusDropdown from './components/StatusDropdown';
 import { useEbsData } from './hooks/useEbsData';
 import { StreamStatus, WithholdStatus } from './utils/ebs';
-import { DEFAULT_STATION, DEFAULT_QUALITY } from './utils/env';
+import { DEFAULT_STREAM, DEFAULT_QUALITY } from './utils/env';
 
 function App() {
   const [isDark, setIsDark] = useState(true);
   const [isTheater, setIsTheater] = useState(false);
 
-  const [station, setStation] = useState(() => {
+  const [stream, setStream] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('station') || DEFAULT_STATION;
+    return params.get('stream') || DEFAULT_STREAM;
   });
 
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isStreamSelectionOpen, setIsStreamSelectionOpen] = useState(false);
-  const [expandedStationId, setExpandedStationId] = useState<string | null>(null);
+  const [expandedStreamId, setExpandedStreamId] = useState<string | null>(null);
   const [region, setRegion] = useState('Default');
   const [isRegionOpen, setIsRegionOpen] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState<string | null>(DEFAULT_QUALITY);
@@ -30,7 +30,7 @@ function App() {
     currentStream,
     sources,
     isValidatingSources
-  } = useEbsData(station, setStation);
+  } = useEbsData(stream, setStream);
 
   useEffect(() => {
     if (isDark) {
@@ -40,23 +40,23 @@ function App() {
     }
   }, [isDark]);
 
-  const handleStationChange = (newStation: string) => {
-    setStation(newStation);
-    setSelectedQuality(DEFAULT_QUALITY); // Reset quality on station change
+  const handleStreamChange = (newStream: string) => {
+    setStream(newStream);
+    setSelectedQuality(DEFAULT_QUALITY); // Reset quality on stream change
     const newParams = new URLSearchParams(window.location.search);
-    newParams.set('station', newStation);
+    newParams.set('stream', newStream);
     window.history.pushState({}, '', `?${newParams.toString()}`);
     setIsStreamSelectionOpen(false);
   };
 
   const handleHomeClick = () => {
-    setStation(DEFAULT_STATION);
+    setStream(DEFAULT_STREAM);
     setSelectedQuality(DEFAULT_QUALITY);
     const newParams = new URLSearchParams(window.location.search);
-    newParams.delete('station');
+    newParams.delete('stream');
     const newUrl = newParams.toString() ? `?${newParams.toString()}` : window.location.pathname;
     window.history.pushState({}, '', newUrl);
-    setExpandedStationId(null);
+    setExpandedStreamId(null);
   };
 
   // UI Sources: Preserve original order for the dropdown menu
@@ -93,17 +93,17 @@ function App() {
         onDarkToggle={() => setIsDark(!isDark)}
         onHomeClick={handleHomeClick}
       >
-        <StationDropdown
+        <StreamDropdown
           isOpen={isStreamSelectionOpen}
           onToggle={() => {
             setIsStreamSelectionOpen(!isStreamSelectionOpen);
             setIsStatusOpen(false);
           }}
           availableStreams={availableStreams}
-          currentStation={station}
-          onStationChange={handleStationChange}
-          expandedStationId={expandedStationId}
-          onToggleExpanded={(id) => setExpandedStationId(expandedStationId === id ? null : id)}
+          currentStream={stream}
+          onStreamChange={handleStreamChange}
+          expandedStreamId={expandedStreamId}
+          onToggleExpanded={(id) => setExpandedStreamId(expandedStreamId === id ? null : id)}
         />
         <StatusDropdown
           isOpen={isStatusOpen}
@@ -129,7 +129,7 @@ function App() {
       <main className={`flex-1 flex items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
         <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
           <Player
-            station={station}
+            stream={stream}
             isValidating={isLoading || isValidatingSources}
             status={currentStream?.status ?? StreamStatus.Offline}
             witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}

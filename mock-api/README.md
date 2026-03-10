@@ -4,10 +4,10 @@ A simple Go-based mock server to facilitate local testing of the EBS webview wit
 
 ## Purpose
 
-This server provides a stable endpoint for testing different station scenarios without needing the real backend. It currently mocks 11 specific stations covering:
+This server provides a stable endpoint for testing different stream scenarios without needing the real backend. It currently mocks 11 specific streams covering:
 - **Live**: Active streams with viewer counts (including a `Local_Test` entry).
-- **Starting Soon**: Stations in transition.
-- **Offline / Withheld**: Stations with various withhold statuses (Legal, Policy, Technical).
+- **Starting Soon**: Streams in transition.
+- **Offline / Withheld**: Streams with various withhold statuses (Legal, Policy, Technical).
 
 ## Getting Started
 
@@ -56,7 +56,7 @@ HLS_PATH=/s/ HLS_DIR=./streams go run main.go
    - If a requested file (e.g., `/s/Pony_Main.m3u8`) is missing, the server will check for:
      1. `mock-api/hls/default/Pony_Main.m3u8`
      2. `mock-api/hls/default.m3u8` (only for `.m3u8` requests)
-   - This allows you to set up a single "default" stream that works for all stations unless overridden.
+   - This allows you to set up a single "default" stream that works for all streams unless overridden.
 3. Access the files via the configured path, e.g., `http://localhost:9000/s/playlist.m3u8`.
 4. The server provides the necessary CORS headers (including `Range` support) for HLS playback.
 
@@ -72,4 +72,4 @@ Vite will prioritize `.env.development` during local development (`npm run dev`)
 
 ## Customizing Mock Data
 
-You can modify the `streams` slice in `main.go` to add or change station data for different testing scenarios.
+You can modify the `streams` slice in `main.go` to add or change stream data for different testing scenarios.

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ebsApi, WithholdStatus } from '../utils/ebs';
+import { ebsApi, WithholdStatus, StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
-import { DEFAULT_STATION, SUPPORTED_QUALITIES, VALIDATE_SOURCES, STREAM_BASE_URL } from '../utils/env';
+import { DEFAULT_STREAM, SUPPORTED_QUALITIES, VALIDATE_SOURCES, STREAM_BASE_URL } from '../utils/env';
 
 
-export function useEbsData(station: string, setStation: (s: string) => void) {
+export function useEbsData(stream: string, setStream: (s: string) => void) {
   const [isLoading, setIsLoading] = useState(true);
   const [availableStreams, setAvailableStreams] = useState<StreamEntry[]>([]);
   const [currentStream, setCurrentStream] = useState<StreamEntry | null>(null);
@@ -20,19 +20,32 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       console.log("[useEbsData] Fetched streams:", streams);
       setAvailableStreams(streams);
 
-      // Find stream matching station or default to first one if station not found
-      console.log("[useEbsData] Looking for station match:", station);
-      const match = streams.find((s: StreamEntry) => s.name.toLowerCase() === station.toLowerCase());
+      // Find stream matching current name or default to first one if not found
+      console.log("[useEbsData] Looking for stream match:", stream);
+      const match = streams.find((s: StreamEntry) => s.name.toLowerCase() === stream.toLowerCase());
       
       if (match) {
         console.log("[useEbsData] Match found:", match.name);
         setCurrentStream(match);
-      } else if (streams.length > 0 && station === DEFAULT_STATION) {
-        console.log("[useEbsData] No match for default station, falling back to first stream:", streams[0].name);
+      } else if (streams.length > 0 && stream === DEFAULT_STREAM) {
+        console.log("[useEbsData] No match for default stream, falling back to first stream:", streams[0].name);
         setCurrentStream(streams[0]);
-        setStation(streams[0].name);
+        setStream(streams[0].name);
+      } else if (stream) {
+        // [Bypass Check] If stream is provided via URL (or otherwise), allow loading even if not in the list
+        console.log("[useEbsData] No match found in list, but stream is provided. Bypassing check for:", stream);
+        
+        // Create a synthetic StreamEntry for the unknown stream so validation logic can proceed
+        const syntheticStream: StreamEntry = {
+          id: `synthetic-${stream}`,
+          name: stream,
+          status: StreamStatus.Live, // Assume live to attempt loading
+          witholdStatus: WithholdStatus.None,
+          viewers: 0
+        };
+        setCurrentStream(syntheticStream);
       } else {
-        console.log("[useEbsData] No match found for:", station);
+        console.log("[useEbsData] No match found and no stream provided.");
         setCurrentStream(null);
       }
 
@@ -46,21 +59,21 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       abortController.abort();
       clearInterval(interval);
     };
-  }, [station, setStation]);
+  }, [stream, setStream]);
 
   useEffect(() => {
     const abortController = new AbortController();
 
     const validateSources = async () => {
-      // Ensure we have the correct stream for the station before validating
-      // If we don't have it yet, or it belongs to a different station, wait for the next effect run
-      if (!currentStream || currentStream.name.toLowerCase() !== station.toLowerCase()) {
+      // Ensure we have the correct stream for the name before validating
+      // If we don't have it yet, or it belongs to a different stream, wait for the next effect run
+      if (!currentStream || currentStream.name.toLowerCase() !== stream.toLowerCase()) {
         return;
       }
 
       // Prevent fetching or validating sources if the stream is withheld
       if (currentStream.witholdStatus !== WithholdStatus.None) {
-        console.log(`[useEbsData] Stream ${station} is withheld, skipping source validation`);
+        console.log(`[useEbsData] Stream ${stream} is withheld, skipping source validation`);
         if (sources.length > 0) setSources([]);
         setIsValidatingSources(false);
         return;
@@ -71,10 +84,10 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
       const potentialSources = [
         ...SUPPORTED_QUALITIES.map((q: string) => ({
           label: q,
-          file: `${baseUrl}${station}-${q}.m3u8`,
+          file: `${baseUrl}${stream}-${q}.m3u8`,
           default: false
         })),
-        { label: 'Source', type: 'hls' as const, file: `${baseUrl}${station}.m3u8`, default: true }
+        { label: 'Source', type: 'hls' as const, file: `${baseUrl}${stream}.m3u8`, default: true }
       ];
 
       if (VALIDATE_SOURCES) {
@@ -125,10 +138,10 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
           validated.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
 
         if (resultsChanged) {
-          console.log(`[useEbsData] Sources changed for ${station}, updating state`);
+          console.log(`[useEbsData] Sources changed for ${stream}, updating state`);
           setSources(validated);
         } else {
-          // console.log(`[useEbsData] Sources unchanged for ${station}, skipping update`);
+          // console.log(`[useEbsData] Sources unchanged for ${stream}, skipping update`);
         }
           setIsValidatingSources(false);
         }
@@ -147,7 +160,7 @@ export function useEbsData(station: string, setStation: (s: string) => void) {
 
     validateSources();
     return () => abortController.abort();
-  }, [station, currentStream]);
+  }, [stream, currentStream]);
 
   return {
     isLoading,

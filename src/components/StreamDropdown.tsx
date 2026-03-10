@@ -1,38 +1,38 @@
 import { Radio, ChevronDown, Activity } from 'lucide-react';
 import { StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
-import { FILTER_STATIONS } from '../utils/env';
+import { FILTER_STREAMS } from '../utils/env';
 
-interface StationDropdownProps {
+interface StreamDropdownProps {
   isOpen: boolean;
   onToggle: () => void;
   availableStreams: StreamEntry[];
-  currentStation: string;
-  onStationChange: (station: string) => void;
-  expandedStationId: string | null;
+  currentStream: string;
+  onStreamChange: (stream: string) => void;
+  expandedStreamId: string | null;
   onToggleExpanded: (id: string) => void;
 }
 
-const StationDropdown = ({
+const StreamDropdown = ({
   isOpen,
   onToggle,
   availableStreams,
-  currentStation,
-  onStationChange,
-  expandedStationId,
+  currentStream,
+  onStreamChange,
+  expandedStreamId,
   onToggleExpanded
-}: StationDropdownProps) => {
+}: StreamDropdownProps) => {
   return (
     <div className="relative">
       <button
         onClick={onToggle}
         className={`theme-toggle flex items-center gap-2 px-4 transition-all duration-300 h-11 ${isOpen ? 'bg-slate-200 dark:bg-white/10' : ''}`}
-        title="Select Station"
+        title="Select Stream"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
         <Radio className={`w-5 h-5 ${isOpen ? 'text-teal-500' : 'text-slate-700 dark:text-slate-300'}`} />
-        <span className="hidden sm:inline font-semibold text-sm text-slate-700 dark:text-white">Stations</span>
+        <span className="hidden sm:inline font-semibold text-sm text-slate-700 dark:text-white">Streams</span>
         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -40,19 +40,19 @@ const StationDropdown = ({
         <div className="premium-dropdown">
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-2">
-              <span className="font-bold text-sm text-slate-900 dark:text-white">Select Station</span>
+              <span className="font-bold text-sm text-slate-900 dark:text-white">Select Stream</span>
               <Radio className="w-4 h-4 text-teal-500" />
             </div>
             <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
               {availableStreams.length > 0 ? (
                 availableStreams
-                  .filter(s => !FILTER_STATIONS || (s.witholdStatus ?? 0) === 0)
+                  .filter(s => !FILTER_STREAMS || (s.witholdStatus ?? 0) === 0)
                   .map((s) => (
                     <div key={s.id} className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => onStationChange(s.name)}
-                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.name === currentStation
+                          onClick={() => onStreamChange(s.name)}
+                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.name === currentStream
                             ? 'bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400'
                             : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400'
                             }`}
@@ -76,17 +76,17 @@ const StationDropdown = ({
                             e.stopPropagation();
                             onToggleExpanded(s.id);
                           }}
-                          className={`p-3 rounded-xl transition-all ${expandedStationId === s.id
+                          className={`p-3 rounded-xl transition-all ${expandedStreamId === s.id
                             ? 'bg-slate-200 dark:bg-white/15 text-teal-500'
                             : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400'
                             }`}
-                          title="Station Info"
+                          title="Stream Info"
                         >
-                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedStationId === s.id ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedStreamId === s.id ? 'rotate-180' : ''}`} />
                         </button>
                       </div>
 
-                      {expandedStationId === s.id && (
+                      {expandedStreamId === s.id && (
                         <div className="mx-2 p-3 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 space-y-2 animate-fade-in-slide-down">
                           <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-200 dark:border-white/5">
                             <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -136,7 +136,7 @@ const StationDropdown = ({
                   ))
               ) : (
                 <div className="p-4 text-center text-slate-500 text-sm italic">
-                  No live stations available
+                  No live streams available
                 </div>
               )}
             </div>
@@ -147,4 +147,4 @@ const StationDropdown = ({
   );
 };
 
-export default StationDropdown;
+export default StreamDropdown;

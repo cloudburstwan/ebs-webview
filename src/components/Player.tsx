@@ -10,7 +10,7 @@ if (typeof window !== 'undefined') {
 import { StreamStatus, WithholdStatus } from '../utils/ebs';
 
 interface PlayerProps {
-  station: string;
+  stream: string;
   isValidating: boolean;
   status: StreamStatus;
   witholdStatus: WithholdStatus;
@@ -23,7 +23,7 @@ interface PlayerProps {
   selectedQuality?: string | null;
 }
 
-const Player = ({ station, isValidating, status, witholdStatus, sources, selectedQuality }: PlayerProps) => {
+const Player = ({ stream, isValidating, status, witholdStatus, sources, selectedQuality }: PlayerProps) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
   const [hasError, setHasError] = useState(false);
@@ -33,11 +33,11 @@ const Player = ({ station, isValidating, status, witholdStatus, sources, selecte
   const isStarting = status === StreamStatus.Starting;
   const isWithheld = witholdStatus !== WithholdStatus.None;
 
-  // Reset error state when sources or station change
+  // Reset error state when sources or stream change
   useEffect(() => {
     setHasError(false);
     setRetryCount(0);
-  }, [sources, station]);
+  }, [sources, stream]);
 
   const createPlayer = () => {
     if (!playerRef.current || sources.length === 0 || !isLive || isWithheld) return;
@@ -46,12 +46,12 @@ const Player = ({ station, isValidating, status, witholdStatus, sources, selecte
       playerInstance.current.remove();
     }
 
-    const displayStation = station.charAt(0).toUpperCase() + station.slice(1);
+    const displayStream = stream.charAt(0).toUpperCase() + stream.slice(1);
 
-    console.log(`[Player] Creating OvenPlayer for ${station} with ${sources.length} sources`);
+    console.log(`[Player] Creating OvenPlayer for ${stream} with ${sources.length} sources`);
 
     playerInstance.current = OvenPlayer.create('oven-player-container', {
-      title: `EBS - ${displayStation}`,
+      title: `EBS - ${displayStream}`,
       autoStart: true,
       playbackRates: [],
       sources: sources,
@@ -113,16 +113,16 @@ const Player = ({ station, isValidating, status, witholdStatus, sources, selecte
       createPlayer();
     }
     
-    // Cleanup on unmount or station change
+    // Cleanup on unmount or stream change
     return () => {
       // Note: We don't remove if just sources change (handled by effect below)
     };
-  }, [isLive, isWithheld, station, sources.length, selectedQuality]); // Added selectedQuality
+  }, [isLive, isWithheld, stream, sources.length, selectedQuality]); // Added selectedQuality
 
   // Efficient Source/Quality Switching
   useEffect(() => {
     if (playerInstance.current && isLive && sources.length > 0) {
-      console.log(`[Player] Updating sources via load() for ${station}`);
+      console.log(`[Player] Updating sources via load() for ${stream}`);
       playerInstance.current.load(sources);
     }
   }, [sources]);
@@ -155,11 +155,11 @@ const Player = ({ station, isValidating, status, witholdStatus, sources, selecte
       }
     }
     if (isStarting) return "The stream is starting and will be live in about a minute.";
-    return "This station is currently offline or does not exist.";
+    return "This stream is currently offline or does not exist.";
   };
 
   return (
-    <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${station}`}>
+    <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${stream}`}>
       {/* Layer 1: The Player Instance (Background) */}
       <div className="absolute inset-0 z-0 bg-black">
         <div 

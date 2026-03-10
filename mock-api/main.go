@@ -69,7 +69,7 @@ func main() {
 			{ID: "st-04", Name: "Policy_Issue", Status: 0, WitholdStatus: 2},
 			{ID: "st-05", Name: "Technical_Issues", Status: 0, WitholdStatus: 3},
 			{ID: "st-06", Name: "Starting_Soon", Status: 1, WitholdStatus: 0},
-			{ID: "st-07", Name: "Quiet_Station", Status: 2, WitholdStatus: 0, Viewers: 12},
+			{ID: "st-07", Name: "Quiet_Stream", Status: 2, WitholdStatus: 0, Viewers: 12},
 			{ID: "st-08", Name: "Classic_Hits", Status: 2, WitholdStatus: 0, Viewers: 890},
 			{ID: "st-09", Name: "Banned_Stream", Status: 0, WitholdStatus: 2},
 			{ID: "st-10", Name: "Test_Feed", Status: 1, WitholdStatus: 0},

@@ -5,7 +5,7 @@ A premium, high-performance HLS stream webview built with React, TypeScript, and
 ## Features
 
 - **React Compiler**: Optimized with the latest React Compiler for maximum efficiency.
-- **Dynamic Station Loading**: Load streams dynamically via URL parameters (`?station=name`).
+- **Dynamic Stream Loading**: Load streams dynamically via URL parameters (`?stream=name`).
 - **Premium UI**: Glassmorphism design with responsive dark/light mode support.
 - **OvenPlayer Integration**: Built-in support for low-latency HLS streaming.
 - **Containerized**: Production-ready `Dockerfile` and `nginx.conf` included.
@@ -45,7 +45,7 @@ The application uses environment variables for configuration:
 
 ## URL Parameters
 
-- `station`: Specify the stream name (e.g., `?station=test`).
+- `stream`: Specify the stream name (e.g., `?stream=test`).
 
 ### IDE Support & Linting
 
