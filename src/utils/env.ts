@@ -11,7 +11,6 @@ export const SUPPORTED_QUALITIES = import.meta.env.VITE_SUPPORTED_QUALITIES
 
 export const DEFAULT_QUALITY = import.meta.env.VITE_DEFAULT_QUALITY || 'Source';
 
-export const VALIDATE_SOURCES = import.meta.env.VITE_VALIDATE_SOURCES === 'true' || false;
 export const FILTER_STREAMS = import.meta.env.VITE_FILTER_STREAMS === 'true';
 
 export const DEFAULT_BASE_URL = import.meta.env.VITE_STREAM_BASE_URL || 'https://stream.equestria.horse';

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ebsApi, WithholdStatus, StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
-import { DEFAULT_STREAM, SUPPORTED_QUALITIES, VALIDATE_SOURCES, STREAM_BASE_URL } from '../utils/env';
+import { DEFAULT_STREAM, SUPPORTED_QUALITIES, STREAM_BASE_URL } from '../utils/env';
 
 
 export function useEbsData(stream: string, setStream: (s: string) => void) {
@@ -23,7 +23,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
       // Find stream matching current name or default to first one if not found
       console.log("[useEbsData] Looking for stream match:", stream);
       const match = streams.find((s: StreamEntry) => s.name.toLowerCase() === stream.toLowerCase());
-      
+
       if (match) {
         console.log("[useEbsData] Match found:", match.name);
         setCurrentStream(match);
@@ -34,7 +34,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
       } else if (stream) {
         // [Bypass Check] If stream is provided via URL (or otherwise), allow loading even if not in the list
         console.log("[useEbsData] No match found in list, but stream is provided. Bypassing check for:", stream);
-        
+
         // Create a synthetic StreamEntry for the unknown stream so validation logic can proceed
         const syntheticStream: StreamEntry = {
           id: `synthetic-${stream}`,
@@ -90,71 +90,14 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
         { label: 'Source', type: 'hls' as const, file: `${baseUrl}${stream}.m3u8`, default: true }
       ];
 
-      if (VALIDATE_SOURCES) {
-        const validationPromises = potentialSources.map(async (src) => {
-          try {
-            const response = await fetch(src.file, {
-              method: 'HEAD',
-              signal: abortController.signal
-            });
-            if (response.ok) {
-              return {
-                label: src.label,
-                type: 'hls' as const,
-                file: src.file,
-                default: src.default
-              };
-            }
-          } catch (error: any) {
-            if (error.name === 'AbortError') return null;
+      const potentialWithTypes = potentialSources.map(s => ({ ...s, type: 'hls' as const }));
+      const resultsChanged = potentialWithTypes.length !== sources.length ||
+        potentialWithTypes.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
 
-            try {
-              const fallback = await fetch(src.file, {
-                method: 'HEAD',
-                mode: 'no-cors',
-                signal: abortController.signal
-              });
-              if (fallback.type === 'opaque') {
-                return {
-                  label: src.label,
-                  type: 'hls' as const,
-                  file: src.file,
-                  default: src.default
-                };
-              }
-            } catch (fallbackError) {
-              return null;
-            }
-          }
-          return null;
-        });
-
-        const results = await Promise.all(validationPromises);
-        const validated = results.filter((r): r is NonNullable<typeof r> => r !== null);
-
-        if (!abortController.signal.aborted) {
-          // Deep compare results to avoid redundant state updates which trigger player refreshes
-        const resultsChanged = validated.length !== sources.length || 
-          validated.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
-
-        if (resultsChanged) {
-          console.log(`[useEbsData] Sources changed for ${stream}, updating state`);
-          setSources(validated);
-        } else {
-          // console.log(`[useEbsData] Sources unchanged for ${stream}, skipping update`);
-        }
-          setIsValidatingSources(false);
-        }
-      } else {
-        const potentialWithTypes = potentialSources.map(s => ({ ...s, type: 'hls' as const }));
-        const resultsChanged = potentialWithTypes.length !== sources.length ||
-          potentialWithTypes.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
-
-        if (resultsChanged) {
-          setSources(potentialWithTypes);
-        }
-        setIsValidatingSources(false);
+      if (resultsChanged) {
+        setSources(potentialWithTypes);
       }
+      setIsValidatingSources(false);
       console.log("[useEbsData] Player Source : ", sources);
     };
 
