@@ -47,6 +47,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   const onVolumeChangeRef = useRef(onVolumeChange);
   const onMuteChangeRef = useRef(onMuteChange);
   const lastStreamRef = useRef(stream);
+  const lastLoadedSourcesRef = useRef<string>('');
   const [playerState, setPlayerState] = useState<PlayerState>(PlayerState.NEW);
   const [retryCount, setRetryCount] = useState(0);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
@@ -164,6 +165,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     });
 
     playerInstance.current = instance;
+    lastLoadedSourcesRef.current = JSON.stringify(sources);
 
     if (typeof window !== 'undefined') {
       (window as any).OvenPlayerInstance = instance;
@@ -295,8 +297,12 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   // Handle source updates without full destroy if possible
   useEffect(() => {
     if (playerInstance.current && playerState === PlayerState.PLAYING) {
-      console.log('[Player] Updating sources on active instance');
-      playerInstance.current.load(sources);
+      const sourcesString = JSON.stringify(sources);
+      if (lastLoadedSourcesRef.current !== sourcesString) {
+        console.log('[Player] Updating sources on active instance');
+        playerInstance.current.load(sources);
+        lastLoadedSourcesRef.current = sourcesString;
+      }
     }
   }, [sources, playerState]);
 
