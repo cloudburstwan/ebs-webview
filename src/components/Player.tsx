@@ -54,16 +54,6 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     setRetryCount(0);
   }, [sources, stream]);
 
-  const togglePlayPause = () => {
-    if (!playerInstance.current) return;
-    const state = playerInstance.current.getState();
-    if (state === 'playing') {
-      playerInstance.current.pause();
-    } else {
-      playerInstance.current.play();
-    }
-  };
-
   const createPlayer = () => {
     if (!playerRef.current || sources.length === 0 || !isLive || isWithheld) return;
 
@@ -176,7 +166,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       // 3. Otherwise, just update source/volume if instance exists
       console.log(`[Player] Updating existing instance sources for ${stream}`);
       playerInstance.current.load(sources);
-      
+
       // Sync volume to current instance
       if (playerInstance.current.getVolume && playerInstance.current.getVolume() !== volume) {
         playerInstance.current.setVolume(volume);
@@ -226,28 +216,19 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${stream}`}>
       {/* Layer 1: The Player Instance (Background) */}
       <div className="absolute inset-0 z-0 bg-black">
-        <div 
-          id="oven-player-container" 
-          ref={playerRef} 
+        <div
+          id="oven-player-container"
+          ref={playerRef}
           className={`w-full h-full transition-opacity duration-500 ${(!isValidating && isLive && !hasError && !isWithheld) ? 'opacity-100 flex' : 'opacity-0'}`}
         />
       </div>
 
       {/* Layer 2: UI Overlay Layer (Foreground) */}
       <div className={`absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center transition-colors duration-300 ${(!isLive || hasError || isWithheld || isValidating) ? 'bg-slate-200/20 dark:bg-black/40' : ''}`}>
-        
-        {/* Click-to-Play/Pause Overlay (Center area, avoids controls and badges) */}
-        {isLive && !hasError && !isWithheld && !isValidating && (
-          <div 
-            className="absolute inset-x-0 top-16 bottom-20 z-10 pointer-events-auto cursor-pointer" 
-            onClick={togglePlayPause}
-            aria-hidden="true"
-          />
-        )}
 
         {/* Status Badge (Stays in top-right) */}
         {!isValidating && (
-          <div 
+          <div
             className={`absolute top-4 right-4 z-50 pointer-events-auto status-badge cursor-pointer ${(isLive && !hasError) ? 'badge-live active:scale-95 transition-transform' : (isStarting ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
             onClick={(e) => {
               e.stopPropagation();
