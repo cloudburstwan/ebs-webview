@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import Player from './components/Player';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -9,8 +10,10 @@ import { StreamStatus, WithholdStatus } from './utils/ebs';
 import { DEFAULT_STREAM, DEFAULT_QUALITY } from './utils/env';
 
 function App() {
-  const [isDark, setIsDark] = useState(true);
-  const [isTheater, setIsTheater] = useState(false);
+  const [isDark, setIsDark] = useLocalStorage('ebs-theme-dark', true);
+  const [isTheater, setIsTheater] = useLocalStorage('ebs-theater-mode', false);
+  const [volume, setVolume] = useLocalStorage('ebs-player-volume', 100);
+  const [isMuted, setIsMuted] = useLocalStorage('ebs-player-muted', false);
 
   const [stream, setStream] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -135,6 +138,10 @@ function App() {
             witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
             sources={playerSources}
             selectedQuality={selectedQuality}
+            volume={volume}
+            onVolumeChange={setVolume}
+            isMuted={isMuted}
+            onMuteChange={setIsMuted}
           />
         </div>
       </main>

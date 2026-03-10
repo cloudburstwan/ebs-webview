@@ -22,13 +22,27 @@ interface PlayerProps {
     default?: boolean;
   }[];
   selectedQuality?: string | null;
+  volume: number;
+  onVolumeChange: (volume: number) => void;
+  isMuted: boolean;
+  onMuteChange: (isMuted: boolean) => void;
 }
 
-const Player = ({ stream, isValidating, status, witholdStatus, sources, selectedQuality }: PlayerProps) => {
+const Player = ({ stream, isValidating, status, witholdStatus, sources, selectedQuality, volume, onVolumeChange, isMuted, onMuteChange }: PlayerProps) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
+  const onVolumeChangeRef = useRef(onVolumeChange);
+  const onMuteChangeRef = useRef(onMuteChange);
+  const lastStreamRef = useRef(stream);
+  const lastQualityRef = useRef(selectedQuality);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+
+  // Keep callback ref up to date
+  useEffect(() => {
+    onVolumeChangeRef.current = onVolumeChange;
+    onMuteChangeRef.current = onMuteChange;
+  }, [onVolumeChange, onMuteChange]);
 
   const isLive = status === StreamStatus.Live;
   const isStarting = status === StreamStatus.Starting;
@@ -66,9 +80,39 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       }
     });
 
+    if (typeof window !== 'undefined') {
+      (window as any).OvenPlayerInstance = playerInstance.current;
+    }
+
     playerInstance.current.on('ready', () => {
       console.log('[Player] OvenPlayer Ready');
       setHasError(false);
+      // Sync initial volume and mute from persistent state
+      playerInstance.current.setVolume(volume);
+      playerInstance.current.setMute(isMuted);
+    });
+
+    playerInstance.current.on('volume', (data: any) => {
+      if (typeof data.volume === 'number' && onVolumeChangeRef.current) {
+        onVolumeChangeRef.current(data.volume);
+      }
+    });
+
+    // Fallback for some versions/themes
+    playerInstance.current.on('volumeChanged', (data: any) => {
+      if (typeof data.volume === 'number' && onVolumeChangeRef.current) {
+        onVolumeChangeRef.current(data.volume);
+      }
+    });
+
+    playerInstance.current.on('mute', (data: any) => {
+      if (typeof data.mute === 'boolean' && onMuteChangeRef.current) {
+        onMuteChangeRef.current(data.mute);
+      }
+    });
+
+    playerInstance.current.on('stateChanged', () => {
+      // State changed
     });
 
     playerInstance.current.on('error', (error: any) => {
@@ -94,45 +138,54 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
     });
   };
 
+  // Primary Player Lifecycle Effect
   useEffect(() => {
-    // If withheld or not live, and player exists, remove it
-    if ((isWithheld || !isLive) && playerInstance.current) {
-      console.log('[Player] Removing player due to withheld/offline status');
-      playerInstance.current.remove();
-      playerInstance.current = null;
+    // 1. Determine if we should have a player
+    const shouldExist = isLive && !isWithheld && sources.length > 0 && playerRef.current;
+
+    if (!shouldExist) {
+      if (playerInstance.current) {
+        console.log('[Player] Removing player instance (not needed)');
+        playerInstance.current.remove();
+        playerInstance.current = null;
+      }
       return;
     }
 
-    if (isLive && !isWithheld && sources.length > 0 && playerRef.current && !playerInstance.current) {
-      createPlayer();
-    }
-    
-    // Manual Quality Change: Force re-creation if selectedQuality changes
-    // This ensures OvenPlayer definitely switches to the new discrete HLS file
-    if (playerInstance.current && selectedQuality) {
-      console.log(`[Player] Manual quality change to ${selectedQuality}, forcing refresh`);
-      createPlayer();
-    }
-    
-    // Cleanup on unmount or stream change
-    return () => {
-      // Note: We don't remove if just sources change (handled by effect below)
-    };
-  }, [isLive, isWithheld, stream, sources.length, selectedQuality]); // Added selectedQuality
+    // 2. Determine if we need to full recreate or just update
+    const streamChanged = lastStreamRef.current !== stream;
+    const qualityChanged = lastQualityRef.current !== selectedQuality;
+    const needsNewInstance = !playerInstance.current || streamChanged || qualityChanged;
 
-  // Efficient Source/Quality Switching
-  useEffect(() => {
-    if (playerInstance.current && isLive && sources.length > 0) {
-      console.log(`[Player] Updating sources via load() for ${stream}`);
+    if (needsNewInstance) {
+      console.log(`[Player] (Re)creating instance. Reason: ${!playerInstance.current ? 'initial' : (streamChanged ? 'stream change' : 'quality change')}`);
+      createPlayer();
+      lastStreamRef.current = stream;
+      lastQualityRef.current = selectedQuality;
+    } else {
+      // 3. Otherwise, just update source/volume if instance exists
+      console.log(`[Player] Updating existing instance sources for ${stream}`);
       playerInstance.current.load(sources);
+      
+      // Sync volume to current instance
+      if (playerInstance.current.getVolume && playerInstance.current.getVolume() !== volume) {
+        playerInstance.current.setVolume(volume);
+      }
+      if (playerInstance.current.getMute && playerInstance.current.getMute() !== isMuted) {
+        playerInstance.current.setMute(isMuted);
+      }
     }
-  }, [sources]);
 
-  // Handle unmount specifically
+    return () => {
+      // Cleanup is handled by the next effect run or unmount
+    };
+  }, [isLive, isWithheld, stream, sources.length, selectedQuality, volume]);
+
+  // Specific cleanup on unmount
   useEffect(() => {
     return () => {
       if (playerInstance.current) {
-        console.log('[Player] Cleaning up OvenPlayer instance');
+        console.log('[Player] Final cleanup on unmount');
         playerInstance.current.remove();
         playerInstance.current = null;
       }
