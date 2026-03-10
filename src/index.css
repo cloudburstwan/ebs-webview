@@ -213,3 +213,37 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(20, 184, 166, 0.5);
 }
+/* OvenPlayer Custom Buttons */
+.op-live-button {
+  color: white !important;
+  opacity: 0.8 !important;
+  transition: opacity 0.2s, color 0.2s;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 0 8px !important;
+  height: 36px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  width: auto !important; /* Allow width to expand for text */
+}
+
+.op-live-button:hover {
+  opacity: 1 !important;
+  color: #2dd4bf !important; /* Teal accent */
+}
+
+.op-live-button svg {
+  width: 18px !important;
+  height: 18px !important;
+  pointer-events: none;
+}
+
+.op-live-text {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  pointer-events: none;
+}
