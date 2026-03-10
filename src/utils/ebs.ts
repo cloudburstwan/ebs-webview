@@ -66,14 +66,17 @@ export class EBSApi {
             console.log('[EBSApi] available streams:', data);
 
             // Normalize data
-            return data.map((s: any) => ({
-                ...s,
+            return (data as (Partial<StreamEntry> & { withhold?: number })[]).map((s) => ({
+                id: s.id || '',
                 name: s.name || 'Unknown',
-                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? s.withhold : WithholdStatus.None)
-            }));
-        } catch (error: any) {
-            if (error.name === 'AbortError') return [];
-            console.error('[EBSApi] getStreams error:', error);
+                status: s.status ?? StreamStatus.Offline,
+                viewers: s.viewers || 0,
+                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? (s.withhold as WithholdStatus) : WithholdStatus.None)
+            })) as StreamEntry[];
+        } catch (error) {
+            const err = error as Error;
+            if (err.name === 'AbortError') return [];
+            console.error('[EBSApi] getStreams error:', err);
             return [];
         }
     }
@@ -85,9 +88,10 @@ export class EBSApi {
                 throw new Error(`Failed to fetch status: ${response.statusText}`);
             }
             return await response.json();
-        } catch (error: any) {
-            if (error.name === 'AbortError') return null;
-            console.error('[EBSApi] getStatus error:', error);
+        } catch (error) {
+            const err = error as Error;
+            if (err.name === 'AbortError') return null;
+            console.error('[EBSApi] getStatus error:', err);
             return null;
         }
     }

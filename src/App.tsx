@@ -32,7 +32,8 @@ function App() {
     availableStreams,
     currentStream,
     sources,
-    isValidatingSources
+    isValidatingSources,
+    refetch
   } = useEbsData(stream, setStream);
 
   useEffect(() => {
@@ -142,6 +143,7 @@ function App() {
             onVolumeChange={setVolume}
             isMuted={isMuted}
             onMuteChange={setIsMuted}
+            refetch={refetch}
           />
         </div>
       </main>
