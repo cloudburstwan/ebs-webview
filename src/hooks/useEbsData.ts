@@ -59,6 +59,21 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
         };
       }
 
+      // Refresh the current stream's live status via the per-stream endpoint.
+      // This gives us the most up-to-date status/withhold info directly from the API.
+      if (activeMatch && activeMatch.name) {
+        try {
+          const fresh = await ebsApi.getStream(activeMatch.name, abortControllerRef.current?.signal);
+          if (fresh) {
+            console.log(`[useEbsData] Per-stream status for ${activeMatch.name}:`, fresh.status);
+            activeMatch = fresh;
+          }
+        } catch (e) {
+          // Non-fatal: fall back to the list match
+          console.warn('[useEbsData] Per-stream status check failed, using list data:', e);
+        }
+      }
+
       setCurrentStream(activeMatch);
       setIsLoading(false);
 

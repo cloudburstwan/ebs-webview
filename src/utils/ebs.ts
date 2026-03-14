@@ -100,6 +100,36 @@ export class EBSApi {
     }
 
     /**
+     * Get a single stream's current status by name or ID.
+     * Calls /api/v1/streams/{nameOrId}
+     */
+    async getStream(nameOrId: string, signal?: AbortSignal): Promise<StreamEntry | null> {
+        try {
+            const response = await fetch(`${this.apiUrl}/streams/${encodeURIComponent(nameOrId)}`, { signal });
+            if (!response.ok) {
+                if (response.status === 404) return null;
+                throw new Error(`Failed to fetch stream ${nameOrId}: ${response.statusText}`);
+            }
+            const s = await response.json() as Partial<StreamEntry> & { withhold?: number };
+            console.log(`[EBSApi] stream ${nameOrId}:`, s);
+            return {
+                id: s.id || '',
+                name: s.name || 'Unknown',
+                humanName: s.humanName || s.name || 'Unknown',
+                status: s.status ?? StreamStatus.Offline,
+                viewers: s.viewers || 0,
+                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? (s.withhold as WithholdStatus) : WithholdStatus.None),
+                dates: s.dates,
+            };
+        } catch (error) {
+            const err = error as Error;
+            if (err.name === 'AbortError') return null;
+            console.error(`[EBSApi] getStream(${nameOrId}) error:`, err);
+            return null;
+        }
+    }
+
+    /**
      * Helper to filter only live streams
      */
     async getLiveStreams(signal?: AbortSignal): Promise<StreamEntry[]> {

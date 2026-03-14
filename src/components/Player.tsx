@@ -111,14 +111,16 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
 
     for (const source of sourcesToValidate) {
       try {
+        // Use redirect: 'manual' so a 302 from the loadbalancer (stream exists) is
+        // detected without following the redirect. Both 2xx and 3xx count as reachable.
         const response = await fetch(source.file, {
           method: 'HEAD',
           cache: 'no-cache',
-          redirect: 'follow'
+          redirect: 'manual'
         });
 
-        if (response.ok) {
-          console.log(`[Player] Source ${source.label} is reachable (${response.status})`);
+        if (response.ok || (response.status >= 300 && response.status < 400)) {
+          console.log(`[Player] Source ${source.label} is reachable (${response.status}${response.type === 'opaqueredirect' ? ' redirect' : ''})`);
           return true;
         } else {
           console.warn(`[Player] Source ${source.label} validation failed: ${response.status} ${response.statusText}`);
@@ -129,6 +131,8 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
           }
         }
       } catch (err) {
+        // With redirect: 'manual', opaque redirects may appear as type 'opaqueredirect'
+        // with status 0. This still means the server responded, so treat it as reachable.
         console.error(`[Player] Source ${source.label} fetch error:`, err);
         setErrorDetails('Network error validating source');
       }
