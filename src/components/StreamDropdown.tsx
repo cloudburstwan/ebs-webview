@@ -92,7 +92,7 @@ const StreamDropdown = ({
                               }`} />
                             <span className="font-semibold text-sm">{s.humanName}</span>
                           </div>
-                          {s.viewers !== undefined && (
+                          {s.viewers !== undefined && s.viewers > 0 && (
                             <span className="text-[10px] bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full">
                               {s.viewers}
                             </span>

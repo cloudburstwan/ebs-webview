@@ -61,7 +61,7 @@ const StatusDropdown = ({
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{currentStream?.humanName || 'Nothing'}</span>
               </div>
 
-              {currentStream?.viewers !== undefined && (
+              {currentStream?.viewers !== undefined && currentStream.viewers > 0 && (
                 <div className="flex flex-col gap-1 pl-1">
                   <span className="text-[10px] font-bold uppercase text-slate-500/60 dark:text-slate-500 tracking-widest">Active Viewers</span>
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{currentStream.viewers}</span>
