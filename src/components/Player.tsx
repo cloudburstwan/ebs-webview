@@ -117,7 +117,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
           redirect: 'follow'
         });
 
-        if (response.ok) {
+        if (response.ok || response.url != source.file) {
           console.log(`[Player] Source ${source.label} is reachable (${response.status})`);
           return true;
         } else {
@@ -250,7 +250,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
           }
           break;
 
-        case PlayerState.VALIDATING_SOURCES:
+        case PlayerState.VALIDATING_SOURCES: {
           const isValid = await validateSources();
           if (isValid) {
             console.log('[Player] State: VALIDATING_SOURCES Passed -> SETUP');
@@ -259,7 +259,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
             console.error('[Player] State: VALIDATING_SOURCES Failed -> ERROR');
             setPlayerState(PlayerState.ERROR);
           }
-          break;
+          break; }
 
         case PlayerState.ERROR:
           if (retryCount < 3) {
