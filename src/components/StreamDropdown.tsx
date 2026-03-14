@@ -63,7 +63,7 @@ const StreamDropdown = ({
                                 s.status === StreamStatus.Offline ? 'bg-rose-500 animate-pulse' :
                                   'bg-slate-400'
                               }`} />
-                            <span className="font-semibold text-sm">{s.name}</span>
+                            <span className="font-semibold text-sm">{s.humanName}</span>
                           </div>
                           {s.viewers !== undefined && (
                             <span className="text-[10px] bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full">

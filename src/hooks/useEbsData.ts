@@ -52,6 +52,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
         activeMatch = {
           id: `synthetic-${stream}`,
           name: stream,
+          humanName: stream,
           status: StreamStatus.Live, // Assume live to attempt loading
           witholdStatus: WithholdStatus.None,
           viewers: 0

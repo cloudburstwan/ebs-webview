@@ -51,7 +51,7 @@ const Header = ({
                                     }`}>
                                     {currentStream.status === StreamStatus.Live ? 'LIVE' : currentStream.status === StreamStatus.Starting ? 'STARTING' : 'OFFLINE'}:
                                 </span>
-                                <span className="ml-1 uppercase text-slate-700 dark:text-slate-300 font-bold">{currentStream.name}</span>
+                                <span className="ml-1 uppercase text-slate-700 dark:text-slate-300 font-bold">{currentStream.humanName}</span>
                             </>
                         ) : (
                             <span className="text-rose-500 font-bold">STREAM NOT FOUND</span>

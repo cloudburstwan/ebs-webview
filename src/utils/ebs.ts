@@ -25,6 +25,7 @@ export type WithholdStatus = (typeof WithholdStatus)[keyof typeof WithholdStatus
 export interface StreamEntry {
     id: string;
     name: string;
+    humanName: string;
     status: StreamStatus;
     witholdStatus: WithholdStatus; // API typo support
     viewers?: number;
@@ -69,9 +70,11 @@ export class EBSApi {
             return (data as (Partial<StreamEntry> & { withhold?: number })[]).map((s) => ({
                 id: s.id || '',
                 name: s.name || 'Unknown',
+                humanName: s.humanName || s.name || 'Unknown',
                 status: s.status ?? StreamStatus.Offline,
                 viewers: s.viewers || 0,
-                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? (s.withhold as WithholdStatus) : WithholdStatus.None)
+                witholdStatus: s.witholdStatus !== undefined ? s.witholdStatus : (s.withhold !== undefined ? (s.withhold as WithholdStatus) : WithholdStatus.None),
+                dates: s.dates,
             })) as StreamEntry[];
         } catch (error) {
             const err = error as Error;

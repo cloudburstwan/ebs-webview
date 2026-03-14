@@ -11,12 +11,19 @@ import (
 	"strings"
 )
 
+type StreamDates struct {
+	StartAt string `json:"startAt"`
+	EndAt   string `json:"endAt"`
+}
+
 type StreamEntry struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Status        int    `json:"status"`
-	WitholdStatus int    `json:"witholdStatus"`
-	Viewers       int    `json:"viewers,omitempty"`
+	ID            string       `json:"id"`
+	Name          string       `json:"name"`
+	HumanName     string       `json:"humanName"`
+	Status        int          `json:"status"`
+	WitholdStatus int          `json:"witholdStatus"`
+	Viewers       int          `json:"viewers,omitempty"`
+	Dates         *StreamDates `json:"dates,omitempty"`
 }
 
 func main() {
@@ -63,17 +70,17 @@ func main() {
 		}
 
 		streams := []StreamEntry{
-			{ID: "st-01", Name: "Pony_Main", Status: 2, WitholdStatus: 0, Viewers: 1250},
-			{ID: "st-02", Name: "Pony_Music", Status: 2, WitholdStatus: 0, Viewers: 450},
-			{ID: "st-03", Name: "Legal_Hold", Status: 0, WitholdStatus: 1},
-			{ID: "st-04", Name: "Policy_Issue", Status: 0, WitholdStatus: 2},
-			{ID: "st-05", Name: "Technical_Issues", Status: 0, WitholdStatus: 3},
-			{ID: "st-06", Name: "Starting_Soon", Status: 1, WitholdStatus: 0},
-			{ID: "st-07", Name: "Quiet_Stream", Status: 2, WitholdStatus: 0, Viewers: 12},
-			{ID: "st-08", Name: "Classic_Hits", Status: 2, WitholdStatus: 0, Viewers: 890},
-			{ID: "st-09", Name: "Banned_Stream", Status: 0, WitholdStatus: 2},
-			{ID: "st-10", Name: "Test_Feed", Status: 1, WitholdStatus: 0},
-			{ID: "st-11", Name: "Local_Test", Status: 2, WitholdStatus: 0, Viewers: 5},
+			{ID: "st-01", Name: "Pony_Main", HumanName: "Pony Main Stage", Status: 2, WitholdStatus: 0, Viewers: 1250, Dates: &StreamDates{StartAt: "2026-03-14T15:00:00.000Z", EndAt: "2026-03-15T03:00:00.000Z"}},
+			{ID: "st-02", Name: "Pony_Music", HumanName: "Pony Music Lounge", Status: 2, WitholdStatus: 0, Viewers: 450, Dates: &StreamDates{StartAt: "2026-03-14T16:00:00.000Z", EndAt: "2026-03-15T02:00:00.000Z"}},
+			{ID: "st-03", Name: "Legal_Hold", HumanName: "Legal Hold Stream", Status: 0, WitholdStatus: 1},
+			{ID: "st-04", Name: "Policy_Issue", HumanName: "Policy Issue Stream", Status: 0, WitholdStatus: 2},
+			{ID: "st-05", Name: "Technical_Issues", HumanName: "Technical Issues", Status: 0, WitholdStatus: 3},
+			{ID: "st-06", Name: "Starting_Soon", HumanName: "Starting Soon", Status: 1, WitholdStatus: 0, Dates: &StreamDates{StartAt: "2026-03-14T18:00:00.000Z", EndAt: "2026-03-15T01:00:00.000Z"}},
+			{ID: "st-07", Name: "Quiet_Stream", HumanName: "Quiet Chill Stream", Status: 2, WitholdStatus: 0, Viewers: 12},
+			{ID: "st-08", Name: "Classic_Hits", HumanName: "Classic Hits Radio", Status: 2, WitholdStatus: 0, Viewers: 890, Dates: &StreamDates{StartAt: "2026-03-14T14:00:00.000Z", EndAt: "2026-03-15T04:00:00.000Z"}},
+			{ID: "st-09", Name: "Banned_Stream", HumanName: "Banned Stream", Status: 0, WitholdStatus: 2},
+			{ID: "st-10", Name: "Test_Feed", HumanName: "Test Feed", Status: 1, WitholdStatus: 0},
+			{ID: "st-11", Name: "Local_Test", HumanName: "Local Test Feed", Status: 2, WitholdStatus: 0, Viewers: 5},
 		}
 
 		w.Header().Set("Content-Type", "application/json")
