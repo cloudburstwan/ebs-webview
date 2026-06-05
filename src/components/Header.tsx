@@ -25,7 +25,7 @@ const Header = ({
     return (
         <header className="premium-header">
             <div
-                className="flex items-center gap-3 flex-shrink-0 cursor-pointer group active:scale-95 transition-transform duration-200"
+                className="flex items-center gap-3 flex-shrink cursor-pointer group active:scale-95 transition-transform duration-200 min-w-0"
                 onClick={onHomeClick}
                 role="button"
                 tabIndex={0}
@@ -52,7 +52,7 @@ const Header = ({
                                     }`}>
                                     {currentStream.status === StreamStatus.Live ? 'LIVE' : currentStream.status === StreamStatus.Starting ? 'STARTING' : 'OFFLINE'}:
                                 </span>
-                                <span className="ml-1 uppercase text-slate-700 dark:text-slate-300 font-bold">{currentStream.humanName}</span>
+                                <span className="ml-1 uppercase text-slate-700 dark:text-slate-300 font-bold truncate">{currentStream.humanName}</span>
                             </>
                         ) : (
                             <span className="text-rose-500 font-bold">STREAM NOT FOUND</span>
@@ -61,7 +61,7 @@ const Header = ({
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 relative flex-shrink-0">
+            <div className="flex items-center gap-2 relative flex-shrink-0 flex-wrap">
                 {children}
 
                 <button

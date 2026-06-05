@@ -98,7 +98,7 @@ function App() {
         />
       </Header>
 
-      <main className={`flex-1 flex items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
+      <main className={`flex-1 flex items-start sm:items-center justify-center min-h-0 ${isTheater ? 'w-full' : ''}`}>
         <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
           <Player
             stream={stream}
