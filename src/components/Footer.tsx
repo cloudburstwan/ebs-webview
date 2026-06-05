@@ -5,7 +5,7 @@ const Footer = () => {
     return (
         <footer className="premium-footer">
             <p>&copy; 2026 {APP_NAME}. All rights reserved.</p>
-            <p>Made with Love by Reiuiji. | V{__APP_VERSION__}</p>
+            <p>Made with Love by Reiuiji. | V{__APP_VERSION__} ({__COMMIT_HASH__})</p>
         </footer>
     );
 };
