@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import Player from './components/Player';
 import Header from './components/Header';
@@ -7,7 +7,7 @@ import StreamDropdown from './components/StreamDropdown';
 import StatusDropdown from './components/StatusDropdown';
 import { useEbsData } from './hooks/useEbsData';
 import { StreamStatus, WithholdStatus } from './utils/ebs';
-import { DEFAULT_STREAM, DEFAULT_QUALITY } from './utils/env';
+import { DEFAULT_STREAM, APP_NAME } from './utils/env';
 
 function App() {
   const [isDark, setIsDark] = useLocalStorage('ebs-theme-dark', true);
@@ -23,16 +23,12 @@ function App() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isStreamSelectionOpen, setIsStreamSelectionOpen] = useState(false);
   const [expandedStreamId, setExpandedStreamId] = useState<string | null>(null);
-  const [region, setRegion] = useState('Default');
-  const [isRegionOpen, setIsRegionOpen] = useState(false);
-  const [selectedQuality, setSelectedQuality] = useState<string | null>(DEFAULT_QUALITY);
 
   const {
     isLoading,
     availableStreams,
     currentStream,
     sources,
-    isValidatingSources,
     refetch
   } = useEbsData(stream, setStream);
 
@@ -46,7 +42,6 @@ function App() {
 
   const handleStreamChange = (newStream: string) => {
     setStream(newStream);
-    setSelectedQuality(DEFAULT_QUALITY); // Reset quality on stream change
     const newParams = new URLSearchParams(window.location.search);
     newParams.set('stream', newStream);
     window.history.pushState({}, '', `?${newParams.toString()}`);
@@ -55,7 +50,6 @@ function App() {
 
   const handleHomeClick = () => {
     setStream(DEFAULT_STREAM);
-    setSelectedQuality(DEFAULT_QUALITY);
     const newParams = new URLSearchParams(window.location.search);
     newParams.delete('stream');
     const newUrl = newParams.toString() ? `?${newParams.toString()}` : window.location.pathname;
@@ -63,31 +57,16 @@ function App() {
     setExpandedStreamId(null);
   };
 
-  // UI Sources: Preserve original order for the dropdown menu
-  const uiSources = useMemo(() => {
-    return sources.map(source => ({
-      ...source,
-      default: selectedQuality ? source.label === selectedQuality : source.default
-    }));
-  }, [sources, selectedQuality]);
-
-  // Player Sources: Reorder to put selected quality first for OvenPlayer priority 
-  const playerSources = useMemo(() => {
-    const sorted = [...uiSources];
-    if (selectedQuality) {
-      const selectedIndex = sorted.findIndex(s => s.label === selectedQuality);
-      if (selectedIndex !== -1) {
-        const [selected] = sorted.splice(selectedIndex, 1);
-        return [selected, ...sorted];
-      }
-    }
-    return sorted;
-  }, [uiSources, selectedQuality]);
+  // CDN unavailable: stream is live but API returned no playback URLs
+  const cdnUnavailable = !isLoading
+    && currentStream?.status === StreamStatus.Live
+    && currentStream?.witholdStatus === WithholdStatus.None
+    && sources.length === 0;
 
   return (
     <div className={`app-root ${isTheater ? 'theater-mode' : ''}`}>
-      <title>{currentStream ? `${currentStream.humanName} - EBS` : 'Equestrian Broadcast Service'}</title>
-      <meta name="description" content={currentStream ? `Watching ${currentStream.humanName} on EBS` : 'Equestrian Broadcast Service - Streaming Platform'} />
+      <title>{currentStream ? `${currentStream.humanName} - ${APP_NAME}` : APP_NAME}</title>
+      <meta name="description" content={currentStream ? `Watching ${currentStream.humanName} on ${APP_NAME}` : `${APP_NAME} - Streaming Platform`} />
 
       <Header
         currentStream={currentStream}
@@ -114,19 +93,8 @@ function App() {
           onToggle={() => {
             setIsStatusOpen(!isStatusOpen);
             setIsStreamSelectionOpen(false);
-            setIsRegionOpen(false);
           }}
           currentStream={currentStream}
-          region={region}
-          isRegionOpen={isRegionOpen}
-          onRegionToggle={(e) => {
-            e.stopPropagation();
-            setIsRegionOpen(!isRegionOpen);
-          }}
-          onRegionSelect={(r) => {
-            setRegion(r);
-            setIsRegionOpen(false);
-          }}
         />
       </Header>
 
@@ -134,11 +102,11 @@ function App() {
         <div className={isTheater ? 'w-full' : 'max-w-5xl w-full'}>
           <Player
             stream={stream}
-            isValidating={isLoading || isValidatingSources}
+            isLoading={isLoading}
             status={currentStream?.status ?? StreamStatus.Offline}
             witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
-            sources={playerSources}
-            selectedQuality={selectedQuality}
+            sources={sources}
+            cdnUnavailable={cdnUnavailable}
             volume={volume}
             onVolumeChange={setVolume}
             isMuted={isMuted}
@@ -154,3 +122,4 @@ function App() {
 }
 
 export default App;
+

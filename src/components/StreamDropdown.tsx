@@ -35,7 +35,7 @@ const StreamDropdown = ({
 
     setLoadingStreamId(stream.id);
     try {
-      const detail = await ebsApi.getStream(stream.name);
+      const detail = await ebsApi.getStream(stream.id);
       if (detail) {
         setStreamDetails(prev => ({ ...prev, [stream.id]: detail }));
       }
@@ -78,8 +78,8 @@ const StreamDropdown = ({
                     <div key={s.id} className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => onStreamChange(s.name)}
-                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.name === currentStream
+                          onClick={() => onStreamChange(s.id)}
+                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.id === currentStream
                             ? 'bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400'
                             : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400'
                             }`}

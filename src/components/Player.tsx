@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { BarChart3 } from 'lucide-react';
+import DebugStats from './DebugStats';
 import OvenPlayer from 'ovenplayer';
 import Hls from 'hls.js';
 
@@ -8,11 +10,11 @@ if (typeof window !== 'undefined') {
 }
 
 import { StreamStatus, WithholdStatus } from '../utils/ebs';
-import { PLAYER_MAX_LIVE_SYNC_PLAYBACK_RATE, PLAYER_LIVE_SYNC_DURATION } from '../utils/env';
+import { PLAYER_MAX_LIVE_SYNC_PLAYBACK_RATE, PLAYER_LIVE_SYNC_DURATION, BRANDED_OVERLAY } from '../utils/env';
 
 interface PlayerProps {
   stream: string;
-  isValidating: boolean;
+  isLoading: boolean;
   status: StreamStatus;
   witholdStatus: WithholdStatus;
   sources: {
@@ -21,7 +23,8 @@ interface PlayerProps {
     type: 'hls' | 'webrtc' | 'dash';
     default?: boolean;
   }[];
-  selectedQuality?: string | null;
+  /** True when stream is live but CDN has no available nodes */
+  cdnUnavailable: boolean;
   volume: number;
   onVolumeChange: (volume: number) => void;
   isMuted: boolean;
@@ -33,7 +36,6 @@ const PlayerState = {
   NEW: 'NEW',
   SETUP: 'SETUP',
   READY: 'READY',
-  VALIDATING_SOURCES: 'VALIDATING_SOURCES',
   CONTENT_AVAILABLE: 'CONTENT_AVAILABLE',
   PLAYING: 'PLAYING',
   ERROR: 'ERROR',
@@ -41,7 +43,7 @@ const PlayerState = {
 } as const;
 type PlayerState = typeof PlayerState[keyof typeof PlayerState];
 
-const Player = ({ stream, isValidating, status, witholdStatus, sources, selectedQuality: _selectedQuality, volume, onVolumeChange, isMuted, onMuteChange, refetch }: PlayerProps) => {
+const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavailable, volume, onVolumeChange, isMuted, onMuteChange, refetch }: PlayerProps) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
   const onVolumeChangeRef = useRef(onVolumeChange);
@@ -51,6 +53,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
   const [playerState, setPlayerState] = useState<PlayerState>(PlayerState.NEW);
   const [retryCount, setRetryCount] = useState(0);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [showDebugStats, setShowDebugStats] = useState(false);
 
   // Keep callback ref up to date
   useEffect(() => {
@@ -98,47 +101,6 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
         (window as any).OvenPlayerInstance = null;
       }
     }
-  };
-
-  const validateSources = async (): Promise<boolean> => {
-    console.log(`[Player] Validating ${sources.length} sources...`);
-
-    // We try to validate at least the first source (usually the default)
-    // or any source marked as default.
-    const sourcesToValidate = sources.filter(s => s.default).length > 0
-      ? sources.filter(s => s.default)
-      : [sources[0]];
-
-    for (const source of sourcesToValidate) {
-      try {
-        // Use redirect: 'manual' so a 302 from the loadbalancer (stream exists) is
-        // detected without following the redirect. Both 2xx and 3xx count as reachable.
-        const response = await fetch(source.file, {
-          method: 'HEAD',
-          cache: 'no-cache',
-          redirect: 'manual'
-        });
-
-        if (response.ok || (response.status >= 300 && response.status < 400)) {
-          console.log(`[Player] Source ${source.label} is reachable (${response.status}${response.type === 'opaqueredirect' ? ' redirect' : ''})`);
-          return true;
-        } else {
-          console.warn(`[Player] Source ${source.label} validation failed: ${response.status} ${response.statusText}`);
-          if (response.status === 404) {
-            setErrorDetails(`Source not found (404)`);
-          } else {
-            setErrorDetails(`Source unreachable (${response.status})`);
-          }
-        }
-      } catch (err) {
-        // With redirect: 'manual', opaque redirects may appear as type 'opaqueredirect'
-        // with status 0. This still means the server responded, so treat it as reachable.
-        console.error(`[Player] Source ${source.label} fetch error:`, err);
-        setErrorDetails('Network error validating source');
-      }
-    }
-
-    return false;
   };
 
   const createPlayer = () => {
@@ -249,19 +211,8 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       switch (playerState) {
         case PlayerState.READY:
           if (isLive && !isWithheld && sources.length > 0) {
-            console.log('[Player] State: READY -> VALIDATING_SOURCES');
-            setPlayerState(PlayerState.VALIDATING_SOURCES);
-          }
-          break;
-
-        case PlayerState.VALIDATING_SOURCES:
-          const isValid = await validateSources();
-          if (isValid) {
-            console.log('[Player] State: VALIDATING_SOURCES Passed -> SETUP');
+            console.log('[Player] State: READY -> SETUP (sources available from API)');
             createPlayer();
-          } else {
-            console.error('[Player] State: VALIDATING_SOURCES Failed -> ERROR');
-            setPlayerState(PlayerState.ERROR);
           }
           break;
 
@@ -331,7 +282,8 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
 
   const getStatusLabel = () => {
     if (playerState === PlayerState.ERROR) return 'Error';
-    if (playerState === PlayerState.RECONNECTING || playerState === PlayerState.VALIDATING_SOURCES) return 'Connecting...';
+    if (playerState === PlayerState.RECONNECTING) return 'Connecting...';
+    if (cdnUnavailable) return 'Buffering';
     if (isWithheld) return 'Withheld';
     if (isLive) return 'Live';
     if (isStarting) return 'Starting';
@@ -347,21 +299,45 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
         default: return "This stream is currently withheld.";
       }
     }
+    if (cdnUnavailable) return "The stream is live but CDN is temporarily unavailable. Retrying...";
     if (isStarting) return "The stream is starting and will be live in about a minute.";
     if (playerState === PlayerState.ERROR) {
       if (retryCount >= 3) return "Failed to connect after multiple attempts. Retrying in 30 seconds...";
       return `The connection was lost. Reconnecting... (Attempt ${retryCount + 1}/3)`;
     }
-    if (playerState === PlayerState.VALIDATING_SOURCES) return "Checking source availability...";
     if (playerState === PlayerState.READY || playerState === PlayerState.SETUP) return "Preparing the player...";
     return "This stream is currently offline or does not exist.";
   };
 
-  const showOverlay = !isLive || isWithheld || playerState === PlayerState.ERROR || playerState === PlayerState.READY || playerState === PlayerState.SETUP || playerState === PlayerState.VALIDATING_SOURCES || isValidating;
-  const showPlayer = (playerState === PlayerState.CONTENT_AVAILABLE || playerState === PlayerState.PLAYING) && !isValidating && !isWithheld && isLive;
+  const showOverlay = !isLive || isWithheld || cdnUnavailable || playerState === PlayerState.ERROR || playerState === PlayerState.READY || playerState === PlayerState.SETUP || isLoading;
+  const showPlayer = (playerState === PlayerState.CONTENT_AVAILABLE || playerState === PlayerState.PLAYING) && !isLoading && !isWithheld && isLive && !cdnUnavailable;
 
   return (
     <div className="player-frame group relative overflow-hidden" role="application" aria-label={`Video player for ${stream}`}>
+      {/* Layer 0: Debug Stats Overlay */}
+      {showDebugStats && playerInstance.current && (
+        <DebugStats
+          playerInstance={playerInstance.current}
+          onClose={() => setShowDebugStats(false)}
+        />
+      )}
+
+      {/* Debug Stats Toggle Button */}
+      {showPlayer && (
+        <button
+          onClick={() => setShowDebugStats(s => !s)}
+          className={`absolute top-4 z-50 pointer-events-auto p-1.5 rounded-md transition-all duration-200 ${
+            showDebugStats
+              ? 'right-4 bg-green-500/20 text-green-400 border border-green-500/30'
+              : 'left-4 bg-black/40 text-white/50 hover:text-white/80 hover:bg-black/60 border border-white/10 opacity-0 group-hover:opacity-100'
+          }`}
+          title={showDebugStats ? 'Close Stats' : 'Stats for Nerds'}
+          aria-label="Toggle debug stats"
+        >
+          <BarChart3 size={16} />
+        </button>
+      )}
+
       {/* Layer 1: The Player Instance (Background) */}
       <div id="player-container" className={`${!showPlayer ? 'player-hidden' : ''} absolute inset-px z-0 bg-transparent`}>
         <div
@@ -375,9 +351,9 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
       <div className={`absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center transition-colors duration-300 ${showOverlay ? 'bg-slate-200/20 dark:bg-black/40' : ''}`}>
 
         {/* Status Badge (Stays in top-right) */}
-        {!isValidating && (
+        {!isLoading && (
           <div
-            className={`absolute top-4 right-4 z-50 pointer-events-auto status-badge cursor-pointer ${(isLive && playerState !== PlayerState.ERROR) ? 'badge-live active:scale-95 transition-transform' : ((isStarting && playerState !== PlayerState.ERROR) ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline')}`}
+            className={`absolute top-4 right-4 z-50 pointer-events-auto status-badge cursor-pointer ${(isLive && playerState !== PlayerState.ERROR && !cdnUnavailable) ? 'badge-live active:scale-95 transition-transform' : ((isStarting && playerState !== PlayerState.ERROR) ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : (cdnUnavailable ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/20 dark:border-amber-500/30' : 'badge-offline'))}`}
             onClick={(e) => {
               e.stopPropagation();
               if (isLive && playerState === PlayerState.PLAYING && playerInstance.current) {
@@ -385,23 +361,31 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
                 playerInstance.current.seek(duration);
               }
             }}
-            title={isLive ? "Click to sync to live edge" : undefined}
+            title={isLive && !cdnUnavailable ? "Click to sync to live edge" : undefined}
           >
-            <span className={`status-dot ${(isLive && playerState !== PlayerState.ERROR) ? 'animate-pulse-glow' : ((isStarting || playerState === PlayerState.RECONNECTING) ? 'bg-amber-500 animate-pulse' : '')}`}></span>
+            <span className={`status-dot ${(isLive && playerState !== PlayerState.ERROR && !cdnUnavailable) ? 'animate-pulse-glow' : ((isStarting || playerState === PlayerState.RECONNECTING || cdnUnavailable) ? 'bg-amber-500 animate-pulse' : '')}`}></span>
             {getStatusLabel()}
           </div>
         )}
 
-        {isValidating ? (
+        {isLoading ? (
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-slate-400/20 border-t-teal-500 rounded-full animate-spin"></div>
             <p className="text-slate-600 dark:text-white/60 font-medium animate-pulse">Initializing Stream...</p>
           </div>
         ) : (showOverlay && playerState !== PlayerState.PLAYING && playerState !== PlayerState.CONTENT_AVAILABLE) ? (
+          BRANDED_OVERLAY && !isWithheld && playerState !== PlayerState.ERROR && playerState !== PlayerState.RECONNECTING ? (
+            <div className="flex flex-col items-center gap-4 pointer-events-auto">
+              <img src="/ebs.svg" alt="No Signal" className="w-[85%] max-w-2xl opacity-60" />
+              {isStarting && (
+                <p className="text-amber-500 font-semibold animate-pulse">Starting Soon...</p>
+              )}
+            </div>
+          ) : (
           <div className="text-center px-6 pointer-events-auto">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border ${isStarting || playerState === PlayerState.RECONNECTING ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
-              {playerState === PlayerState.ERROR || playerState === PlayerState.RECONNECTING ? (
-                <div className={`w-10 h-10 border-4 border-rose-500/20 ${playerState === PlayerState.RECONNECTING ? 'border-t-amber-500' : 'border-t-rose-500'} rounded-full animate-spin`}></div>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border ${(isStarting || playerState === PlayerState.RECONNECTING || cdnUnavailable) ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
+              {playerState === PlayerState.ERROR || playerState === PlayerState.RECONNECTING || cdnUnavailable ? (
+                <div className={`w-10 h-10 border-4 border-rose-500/20 ${(playerState === PlayerState.RECONNECTING || cdnUnavailable) ? 'border-t-amber-500' : 'border-t-rose-500'} rounded-full animate-spin`}></div>
               ) : (
                 <svg className={`w-10 h-10 ${isStarting ? 'text-amber-500' : 'text-rose-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -409,7 +393,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
               )}
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              {playerState === PlayerState.ERROR ? 'Connection Lost' : (playerState === PlayerState.RECONNECTING ? 'Reconnecting' : (isWithheld ? 'Stream Withheld' : (isStarting ? 'Starting Soon' : ((playerState === PlayerState.READY || playerState === PlayerState.SETUP || playerState === PlayerState.VALIDATING_SOURCES) ? 'Player Loading' : 'Stream Unavailable'))))}
+              {playerState === PlayerState.ERROR ? 'Connection Lost' : (playerState === PlayerState.RECONNECTING ? 'Reconnecting' : (isWithheld ? 'Stream Withheld' : (cdnUnavailable ? 'CDN Unavailable' : (isStarting ? 'Starting Soon' : ((playerState === PlayerState.READY || playerState === PlayerState.SETUP) ? 'Player Loading' : 'Stream Unavailable')))))}
             </h3>
             <p className="text-slate-500 dark:text-white/60 max-w-sm mx-auto">
               {getErrorMessage()}
@@ -432,6 +416,7 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
               </button>
             )}
           </div>
+          )
         ) : null}
       </div>
     </div>
@@ -439,3 +424,4 @@ const Player = ({ stream, isValidating, status, witholdStatus, sources, selected
 };
 
 export default Player;
+

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ebsApi, WithholdStatus, StreamStatus } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
-import { DEFAULT_STREAM, SUPPORTED_QUALITIES, STREAM_BASE_URL, POLLING_INTERVAL_NORMAL, POLLING_INTERVAL_STARTING_SOON } from '../utils/env';
+import { DEFAULT_STREAM, DEFAULT_BASE_URL, POLLING_INTERVAL_NORMAL, POLLING_INTERVAL_STARTING_SOON } from '../utils/env';
 
 
 export interface PlayerSource {
@@ -16,7 +16,6 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
   const [availableStreams, setAvailableStreams] = useState<StreamEntry[]>([]);
   const [currentStream, setCurrentStream] = useState<StreamEntry | null>(null);
   const [sources, setSources] = useState<PlayerSource[]>([]);
-  const [isValidatingSources, setIsValidatingSources] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const fetchStreamsRef = useRef<() => Promise<void>>(async () => { });
@@ -32,40 +31,46 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
       console.log("[useEbsData] Fetched streams:", streams);
       setAvailableStreams(streams);
 
-      // Find stream matching current name or default to first one if not found
-      console.log("[useEbsData] Looking for stream match:", stream);
-      const match = streams.find((s: StreamEntry) => s.name.toLowerCase() === stream.toLowerCase());
+      // Find stream matching current id or default to first one if not found
+      console.log("[useEbsData] Looking for stream match by id:", stream);
+      const match = streams.find((s: StreamEntry) => s.id === stream);
 
       let activeMatch: StreamEntry | null = null;
       if (match) {
-        console.log("[useEbsData] Match found:", match.name);
+        console.log("[useEbsData] Match found:", match.id, match.name);
         activeMatch = match;
       } else if (streams.length > 0 && stream === DEFAULT_STREAM) {
-        console.log("[useEbsData] No match for default stream, falling back to first stream:", streams[0].name);
+        console.log("[useEbsData] No match for default stream, falling back to first stream:", streams[0].id, streams[0].name);
         activeMatch = streams[0];
-        setStream(streams[0].name);
+        setStream(streams[0].id);
       } else if (stream) {
         // [Bypass Check] If stream is provided via URL (or otherwise), allow loading even if not in the list
         console.log("[useEbsData] No match found in list, but stream is provided. Bypassing check for:", stream);
 
         // Create a synthetic StreamEntry for the unknown stream so validation logic can proceed
         activeMatch = {
-          id: `synthetic-${stream}`,
+          id: stream,
           name: stream,
           humanName: stream,
           status: StreamStatus.Live, // Assume live to attempt loading
           witholdStatus: WithholdStatus.None,
-          viewers: 0
+          viewers: 0,
+          urls: null,
         };
       }
 
       // Refresh the current stream's live status via the per-stream endpoint.
-      // This gives us the most up-to-date status/withhold info directly from the API.
-      if (activeMatch && activeMatch.name) {
+      // This gives us the most up-to-date status/withhold info AND embedded playback URLs.
+      if (activeMatch && activeMatch.id) {
         try {
-          const fresh = await ebsApi.getStream(activeMatch.name, abortControllerRef.current?.signal);
+          const fresh = await ebsApi.getStream(activeMatch.id, abortControllerRef.current?.signal);
           if (fresh) {
-            console.log(`[useEbsData] Per-stream status for ${activeMatch.name}:`, fresh.status);
+            console.log(`[useEbsData] Per-stream detail for ${activeMatch.id}:`, {
+              status: fresh.status,
+              statusLabel: fresh.statusLabel,
+              hasUrls: !!fresh.urls,
+              source: fresh.urls?.source,
+            });
             activeMatch = fresh;
           }
         } catch (e) {
@@ -101,12 +106,10 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
 
   useEffect(() => {
     // Reset data immediately on stream change
-    // Using a microtask to avoid "setState during render" warning if this effect runs synchronously
     const reset = () => {
       setCurrentStream(null);
       setSources([]);
       setIsLoading(true);
-      setIsValidatingSources(false);
     };
     reset();
 
@@ -122,45 +125,93 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
     };
   }, [stream, fetchStreams]);
 
+  // Build player sources from API-provided playback URLs
   useEffect(() => {
-    const validateSources = async () => {
-      // Ensure we have the correct stream for the name before validating
-      // If we don't have it yet, or it belongs to a different stream, wait for the next effect run
-      if (!currentStream || currentStream.name.toLowerCase() !== stream.toLowerCase()) {
-        return;
+    if (!currentStream || currentStream.id !== stream) {
+      return;
+    }
+
+    // Don't provide sources if the stream is withheld
+    if (currentStream.witholdStatus !== WithholdStatus.None) {
+      console.log(`[useEbsData] Stream ${stream} is withheld, no sources available`);
+      if (sources.length > 0) setSources([]);
+      return;
+    }
+
+    // Use API-provided playback URLs when available
+    if (currentStream.urls) {
+      const apiSources: PlayerSource[] = [];
+
+      // LL-HLS as primary source
+      if (currentStream.urls.llhls) {
+        apiSources.push({
+          label: 'Source',
+          file: currentStream.urls.llhls,
+          type: 'hls',
+          default: true,
+        });
       }
 
-      // Prevent fetching or validating sources if the stream is withheld
-      if (currentStream.witholdStatus !== WithholdStatus.None) {
-        console.log(`[useEbsData] Stream ${stream} is withheld, stopped loading stream`);
-        if (sources.length > 0) setSources([]);
-        setIsValidatingSources(false);
-        return;
+      // WebRTC as secondary low-latency source
+      if (currentStream.urls.webrtc) {
+        apiSources.push({
+          label: 'Low Latency',
+          file: currentStream.urls.webrtc,
+          type: 'webrtc',
+          default: false,
+        });
       }
 
-      const baseUrl = STREAM_BASE_URL.endsWith('/') ? STREAM_BASE_URL : `${STREAM_BASE_URL}/`;
+      console.log(`[useEbsData] API-provided sources (${currentStream.urls.source} tier):`, apiSources);
 
-      const potentialSources = [
-        ...SUPPORTED_QUALITIES.map((q: string) => ({
-          label: q,
-          file: `${baseUrl}${stream}-${q}.m3u8`,
-          default: false
-        })),
-        { label: 'Source', type: 'hls' as const, file: `${baseUrl}${stream}.m3u8`, default: true }
-      ];
-
-      const potentialWithTypes = potentialSources.map(s => ({ ...s, type: 'hls' as const }));
-      const resultsChanged = potentialWithTypes.length !== sources.length ||
-        potentialWithTypes.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label || v.default !== sources[i].default);
+      const resultsChanged = apiSources.length !== sources.length ||
+        apiSources.some((v, i) => i >= sources.length || v.file !== sources[i].file || v.label !== sources[i].label);
 
       if (resultsChanged) {
-        setSources(potentialWithTypes);
+        setSources(apiSources);
       }
-      setIsValidatingSources(false);
-      console.log("[useEbsData] Player Source : ", sources);
-    };
+    } else if (currentStream.status === StreamStatus.Live) {
+      // Stream is live but API doesn't embed playback URLs — construct from env
+      const suffix = import.meta.env.VITE_STREAM_SUFFIX || 's';
+      const qualities: string[] = import.meta.env.VITE_SUPPORTED_QUALITIES
+        ? import.meta.env.VITE_SUPPORTED_QUALITIES.split(',').map((q: string) => q.trim())
+        : [];
 
-    validateSources();
+      const fallbackSources: PlayerSource[] = [];
+
+      // Source quality (no suffix) as default
+      fallbackSources.push({
+        label: 'Source',
+        file: `${DEFAULT_BASE_URL}/${suffix}/${currentStream.name}.m3u8`,
+        type: 'hls',
+        default: true,
+      });
+
+      // Additional quality variants: {name}-{quality}.m3u8
+      for (const q of qualities) {
+        fallbackSources.push({
+          label: q,
+          file: `${DEFAULT_BASE_URL}/${suffix}/${currentStream.name}-${q}.m3u8`,
+          type: 'hls',
+          default: false,
+        });
+      }
+
+      console.log(`[useEbsData] No API URLs, using fallback HLS sources:`, fallbackSources);
+
+      const resultsChanged = fallbackSources.length !== sources.length ||
+        fallbackSources.some((v, i) => i >= sources.length || v.file !== sources[i].file);
+
+      if (resultsChanged) {
+        setSources(fallbackSources);
+      }
+    } else {
+      // Stream is offline — no sources
+      if (sources.length > 0) {
+        console.log(`[useEbsData] Stream ${stream} is offline, clearing sources`);
+        setSources([]);
+      }
+    }
   }, [stream, currentStream, sources.length]);
 
   const refetch = () => {
@@ -175,7 +226,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
     availableStreams,
     currentStream,
     sources,
-    isValidatingSources,
     refetch
   };
 }
+

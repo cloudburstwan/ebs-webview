@@ -1,4 +1,4 @@
-# Equestrian Broadcast Service
+# EBS Webview
 
 A premium, high-performance HLS stream webview built with React, TypeScript, and OvenPlayer.
 
@@ -6,6 +6,7 @@ A premium, high-performance HLS stream webview built with React, TypeScript, and
 
 - **React Compiler**: Optimized with the latest React Compiler for maximum efficiency.
 - **Dynamic Stream Loading**: Load streams dynamically via URL parameters (`?stream=name`).
+- **Configurable Branding**: Site name is configurable via `VITE_APP_NAME` environment variable.
 - **Premium UI**: Glassmorphism design with responsive dark/light mode support.
 - **OvenPlayer Integration**: Built-in support for low-latency HLS streaming.
 - **Containerized**: Production-ready `Dockerfile` and `nginx.conf` included.
@@ -21,6 +22,7 @@ A premium, high-performance HLS stream webview built with React, TypeScript, and
    ```
 2. Create or update `.env` file:
    ```env
+   VITE_APP_NAME=Equestrian Broadcast Service
    VITE_STREAM_BASE_URL=https://stream.equestria.horse
    ```
 3. Run the development server:
@@ -41,6 +43,7 @@ docker run -p 8080:80 ebs-webview
 ## Configuration
 
 The application uses environment variables for configuration:
+- `VITE_APP_NAME`: The display name shown in the header, page title, and footer. Defaults to `Equestrian Broadcast Service`.
 - `VITE_STREAM_BASE_URL`: The base URL for EBS where all API and HLS streams are hosted. Defaults to `https://stream.equestria.horse`.
 
 ## URL Parameters
