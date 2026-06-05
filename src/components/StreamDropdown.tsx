@@ -1,5 +1,6 @@
-import { Radio, ChevronDown, Activity } from 'lucide-react';
-import { StreamStatus } from '../utils/ebs';
+import { useState, useCallback } from 'react';
+import { Radio, ChevronDown, Activity, Loader2 } from 'lucide-react';
+import { StreamStatus, ebsApi } from '../utils/ebs';
 import type { StreamEntry } from '../utils/ebs';
 import { FILTER_STREAMS } from '../utils/env';
 
@@ -22,6 +23,29 @@ const StreamDropdown = ({
   expandedStreamId,
   onToggleExpanded
 }: StreamDropdownProps) => {
+  const [streamDetails, setStreamDetails] = useState<Record<string, StreamEntry>>({});
+  const [loadingStreamId, setLoadingStreamId] = useState<string | null>(null);
+
+  const handleToggleExpanded = useCallback(async (stream: StreamEntry) => {
+    const isClosing = expandedStreamId === stream.id;
+    onToggleExpanded(stream.id);
+
+    // If closing or already cached, don't fetch
+    if (isClosing || streamDetails[stream.id]) return;
+
+    setLoadingStreamId(stream.id);
+    try {
+      const detail = await ebsApi.getStream(stream.id);
+      if (detail) {
+        setStreamDetails(prev => ({ ...prev, [stream.id]: detail }));
+      }
+    } catch (e) {
+      console.warn('[StreamDropdown] Failed to fetch stream details:', e);
+    } finally {
+      setLoadingStreamId(null);
+    }
+  }, [expandedStreamId, onToggleExpanded, streamDetails]);
+
   return (
     <div className="relative">
       <button
@@ -47,12 +71,15 @@ const StreamDropdown = ({
               {availableStreams.length > 0 ? (
                 availableStreams
                   .filter(s => !FILTER_STREAMS || (s.witholdStatus ?? 0) === 0)
-                  .map((s) => (
+                  .map((s) => {
+                    // Use fetched detail data if available, otherwise fall back to list data
+                    const detail = streamDetails[s.id] || s;
+                    return (
                     <div key={s.id} className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => onStreamChange(s.name)}
-                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.name === currentStream
+                          onClick={() => onStreamChange(s.id)}
+                          className={`flex-1 flex items-center justify-between p-3 rounded-xl transition-all ${s.id === currentStream
                             ? 'bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400'
                             : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400'
                             }`}
@@ -63,9 +90,9 @@ const StreamDropdown = ({
                                 s.status === StreamStatus.Offline ? 'bg-rose-500 animate-pulse' :
                                   'bg-slate-400'
                               }`} />
-                            <span className="font-semibold text-sm">{s.name}</span>
+                            <span className="font-semibold text-sm">{s.humanName}</span>
                           </div>
-                          {s.viewers !== undefined && (
+                          {s.viewers !== undefined && s.viewers > 0 && (
                             <span className="text-[10px] bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full">
                               {s.viewers}
                             </span>
@@ -74,7 +101,7 @@ const StreamDropdown = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onToggleExpanded(s.id);
+                            handleToggleExpanded(s);
                           }}
                           className={`p-3 rounded-xl transition-all ${expandedStreamId === s.id
                             ? 'bg-slate-200 dark:bg-white/15 text-teal-500'
@@ -88,52 +115,61 @@ const StreamDropdown = ({
 
                       {expandedStreamId === s.id && (
                         <div className="mx-2 p-3 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 space-y-2 animate-fade-in-slide-down">
-                          <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-200 dark:border-white/5">
-                            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                              <span>Status</span>
-                              <div className={`w-1.5 h-1.5 rounded-full ${s.status === StreamStatus.Live ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                            </div>
-                            <span className={`text-xs font-bold ${s.status === StreamStatus.Live ? 'text-emerald-500' : 'text-rose-500'}`}>
-                              {s.status === StreamStatus.Live ? 'Online' : 'Offline'}
-                            </span>
-                          </div>
-                          
-                          {s.dates ? (
-                            <div className="flex flex-col gap-1.5">
-                              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                <span>Stream Period</span>
-                                <Activity className="w-3 h-3" />
-                              </div>
-                              <div className="grid grid-cols-1 gap-2">
-                                <div className="flex flex-col">
-                                  <span className="text-[9px] text-slate-400 uppercase font-medium">Starts</span>
-                                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                    {s.dates.startAt ? new Date(s.dates.startAt).toLocaleString(undefined, {
-                                      dateStyle: 'medium',
-                                      timeStyle: 'short'
-                                    }) : 'Unknown'}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-[9px] text-slate-400 uppercase font-medium">Ends</span>
-                                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                    {s.dates.endAt ? new Date(s.dates.endAt).toLocaleString(undefined, {
-                                      dateStyle: 'medium',
-                                      timeStyle: 'short'
-                                    }) : 'Unknown'}
-                                  </span>
-                                </div>
-                              </div>
+                          {loadingStreamId === s.id ? (
+                            <div className="flex items-center justify-center py-2 gap-2">
+                              <Loader2 className="w-4 h-4 text-teal-500 animate-spin" />
+                              <span className="text-[10px] text-slate-400">Loading stream info...</span>
                             </div>
                           ) : (
-                            <div className="py-1 text-center">
-                              <span className="text-[10px] text-slate-400 italic">No schedule data available</span>
-                            </div>
+                            <>
+                              <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-200 dark:border-white/5">
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                  <span>Status</span>
+                                  <div className={`w-1.5 h-1.5 rounded-full ${detail.status === StreamStatus.Live ? 'bg-emerald-500 animate-pulse' : detail.status === StreamStatus.Starting ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
+                                </div>
+                                <span className={`text-xs font-bold ${detail.status === StreamStatus.Live ? 'text-emerald-500' : detail.status === StreamStatus.Starting ? 'text-amber-500' : 'text-rose-500'}`}>
+                                  {detail.status === StreamStatus.Live ? 'Online' : detail.status === StreamStatus.Starting ? 'Starting' : 'Offline'}
+                                </span>
+                              </div>
+                              
+                              {detail.dates ? (
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    <span>Stream Period</span>
+                                    <Activity className="w-3 h-3" />
+                                  </div>
+                                  <div className="grid grid-cols-1 gap-2">
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] text-slate-400 uppercase font-medium">Starts</span>
+                                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                        {detail.dates.startAt ? new Date(detail.dates.startAt).toLocaleString(undefined, {
+                                          dateStyle: 'medium',
+                                          timeStyle: 'short'
+                                        }) : 'Unknown'}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] text-slate-400 uppercase font-medium">Ends</span>
+                                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                        {detail.dates.endAt ? new Date(detail.dates.endAt).toLocaleString(undefined, {
+                                          dateStyle: 'medium',
+                                          timeStyle: 'short'
+                                        }) : 'Unknown'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="py-1 text-center">
+                                  <span className="text-[10px] text-slate-400 italic">No schedule data available</span>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       )}
                     </div>
-                  ))
+                  )})
               ) : (
                 <div className="p-4 text-center text-slate-500 text-sm italic">
                   No live streams available
