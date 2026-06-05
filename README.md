@@ -62,8 +62,27 @@ The project includes a `.vscode/settings.json` file to suppress these warnings:
 }
 ```
 
+## Branching & Auto Versioning
+
+When a PR is merged to `main`, the version in `package.json` is automatically bumped based on the branch name prefix:
+
+| Branch Prefix | Bump Type | Example |
+|---------------|-----------|---------|
+| `patch/*`, `fix/*`, `hotfix/*` | **Patch** | `1.0.0` → `1.0.1` |
+| `minor/*`, `feat/*`, `feature/*` | **Minor** | `1.0.0` → `1.1.0` |
+| `major/*` | **Major** | `1.0.0` → `2.0.0` |
+| Any other prefix | **Skip** | No version change |
+
+A git tag (`v1.0.1`) is created automatically on each bump. The version and commit hash are displayed in the footer.
+
+**Examples:**
+```
+patch/fix-mobile-header
+fix/dropdown-overflow
+feat/stream-quality-selector
+major/v2-redesign
+```
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
