@@ -25,6 +25,8 @@ interface PlayerProps {
   }[];
   /** True when stream is live but CDN has no available nodes */
   cdnUnavailable: boolean;
+  /** True when the API returned zero streams */
+  noStreamsAvailable: boolean;
   volume: number;
   onVolumeChange: (volume: number) => void;
   isMuted: boolean;
@@ -43,7 +45,7 @@ const PlayerState = {
 } as const;
 type PlayerState = typeof PlayerState[keyof typeof PlayerState];
 
-const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavailable, volume, onVolumeChange, isMuted, onMuteChange, refetch }: PlayerProps) => {
+const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavailable, noStreamsAvailable, volume, onVolumeChange, isMuted, onMuteChange, refetch }: PlayerProps) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<any>(null);
   const onVolumeChangeRef = useRef(onVolumeChange);
@@ -281,6 +283,7 @@ const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavaila
   }, []);
 
   const getStatusLabel = () => {
+    if (noStreamsAvailable) return 'Unavailable';
     if (playerState === PlayerState.ERROR) return 'Error';
     if (playerState === PlayerState.RECONNECTING) return 'Connecting...';
     if (cdnUnavailable) return 'Buffering';
@@ -291,6 +294,7 @@ const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavaila
   };
 
   const getErrorMessage = () => {
+    if (noStreamsAvailable) return "No streams are currently available. Check back later.";
     if (isWithheld) {
       switch (witholdStatus) {
         case WithholdStatus.Legal: return "This stream has been withheld for legal reasons.";
@@ -309,7 +313,7 @@ const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavaila
     return "This stream is currently offline or does not exist.";
   };
 
-  const showOverlay = !isLive || isWithheld || cdnUnavailable || playerState === PlayerState.ERROR || playerState === PlayerState.READY || playerState === PlayerState.SETUP || isLoading;
+  const showOverlay = noStreamsAvailable || !isLive || isWithheld || cdnUnavailable || playerState === PlayerState.ERROR || playerState === PlayerState.READY || playerState === PlayerState.SETUP || isLoading;
   const showPlayer = (playerState === PlayerState.CONTENT_AVAILABLE || playerState === PlayerState.PLAYING) && !isLoading && !isWithheld && isLive && !cdnUnavailable;
 
   return (
@@ -377,8 +381,12 @@ const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavaila
           BRANDED_OVERLAY && !isWithheld && playerState !== PlayerState.ERROR && playerState !== PlayerState.RECONNECTING ? (
             <div className="flex flex-col items-center gap-4 pointer-events-auto">
               <img src="/ebs.svg" alt="No Signal" className="w-[85%] max-w-2xl opacity-60" />
-              {isStarting && (
+              {noStreamsAvailable ? (
+                <p className="text-slate-500 dark:text-white/50 font-semibold">No streams are currently available</p>
+              ) : isStarting ? (
                 <p className="text-amber-500 font-semibold animate-pulse">Starting Soon...</p>
+              ) : !isLive && (
+                <p className="text-slate-500 dark:text-white/50 font-semibold">Stream Offline</p>
               )}
             </div>
           ) : (
@@ -393,7 +401,7 @@ const Player = ({ stream, isLoading, status, witholdStatus, sources, cdnUnavaila
               )}
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              {playerState === PlayerState.ERROR ? 'Connection Lost' : (playerState === PlayerState.RECONNECTING ? 'Reconnecting' : (isWithheld ? 'Stream Withheld' : (cdnUnavailable ? 'CDN Unavailable' : (isStarting ? 'Starting Soon' : ((playerState === PlayerState.READY || playerState === PlayerState.SETUP) ? 'Player Loading' : 'Stream Unavailable')))))}
+              {playerState === PlayerState.ERROR ? 'Connection Lost' : (playerState === PlayerState.RECONNECTING ? 'Reconnecting' : (isWithheld ? 'Stream Withheld' : (cdnUnavailable ? 'CDN Unavailable' : (noStreamsAvailable ? 'No Streams Available' : (isStarting ? 'Starting Soon' : ((playerState === PlayerState.READY || playerState === PlayerState.SETUP) ? 'Player Loading' : 'Stream Unavailable'))))))}
             </h3>
             <p className="text-slate-500 dark:text-white/60 max-w-sm mx-auto">
               {getErrorMessage()}

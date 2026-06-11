@@ -16,6 +16,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
   const [availableStreams, setAvailableStreams] = useState<StreamEntry[]>([]);
   const [currentStream, setCurrentStream] = useState<StreamEntry | null>(null);
   const [sources, setSources] = useState<PlayerSource[]>([]);
+  const [noStreamsAvailable, setNoStreamsAvailable] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const fetchStreamsRef = useRef<() => Promise<void>>(async () => { });
@@ -39,13 +40,22 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
       if (match) {
         console.log("[useEbsData] Match found:", match.id, match.name);
         activeMatch = match;
+        setNoStreamsAvailable(false);
       } else if (streams.length > 0 && stream === DEFAULT_STREAM) {
         console.log("[useEbsData] No match for default stream, falling back to first stream:", streams[0].id, streams[0].name);
         activeMatch = streams[0];
         setStream(streams[0].id);
+        setNoStreamsAvailable(false);
+      } else if (streams.length === 0) {
+        // API returned no streams at all — nothing is configured/available
+        console.log("[useEbsData] API returned empty stream list. No streams available.");
+        activeMatch = null;
+        setNoStreamsAvailable(true);
       } else if (stream) {
         // [Bypass Check] If stream is provided via URL (or otherwise), allow loading even if not in the list
+        // Only applies when the API has streams but the requested one isn't among them
         console.log("[useEbsData] No match found in list, but stream is provided. Bypassing check for:", stream);
+        setNoStreamsAvailable(false);
 
         // Create a synthetic StreamEntry for the unknown stream so validation logic can proceed
         activeMatch = {
@@ -226,6 +236,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
     availableStreams,
     currentStream,
     sources,
+    noStreamsAvailable,
     refetch
   };
 }

@@ -29,6 +29,7 @@ function App() {
     availableStreams,
     currentStream,
     sources,
+    noStreamsAvailable,
     refetch
   } = useEbsData(stream, setStream);
 
@@ -107,6 +108,7 @@ function App() {
             witholdStatus={currentStream?.witholdStatus ?? WithholdStatus.None}
             sources={sources}
             cdnUnavailable={cdnUnavailable}
+            noStreamsAvailable={noStreamsAvailable}
             volume={volume}
             onVolumeChange={setVolume}
             isMuted={isMuted}
