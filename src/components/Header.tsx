@@ -55,7 +55,7 @@ const Header = ({
                                 <span className="ml-1 uppercase text-slate-700 dark:text-slate-300 font-bold truncate">{currentStream.humanName}</span>
                             </>
                         ) : (
-                            <span className="text-rose-500 font-bold">STREAM NOT FOUND</span>
+                            <span className="text-slate-500 font-bold">NO STREAMS AVAILABLE</span>
                         )}
                     </div>
                 </div>
