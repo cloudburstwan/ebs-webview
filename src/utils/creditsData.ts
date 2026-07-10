@@ -1,6 +1,6 @@
 export interface Contributor {
   name: string;
-  role?: string;
+  role?: string[];
   avatarUrl?: string;
   links?: {
     label: string;
@@ -20,19 +20,19 @@ export const creditsData: CreditSection[] = [
     description: "The core engineering team behind the platform and player experience.",
     contributors: [
       {
-        name: "Reiuiji",
-        role: "Developer",
-        avatarUrl: "https://avatars.githubusercontent.com/u/633476?v=4",
-        links: [
-          { label: "GitHub", url: "https://github.com/Reiuiji" }
-        ]
-      },
-      {
         name: "Cloudburst",
-        role: "Developer",
+        role: ["Project Lead", "Developer"],
         avatarUrl: "https://avatars.githubusercontent.com/u/43821940?v=4",
         links: [
           { label: "GitHub", url: "https://github.com/cloudburstwan" }
+        ]
+      },
+      {
+        name: "Reiuiji",
+        role: ["Developer"],
+        avatarUrl: "https://avatars.githubusercontent.com/u/633476?v=4",
+        links: [
+          { label: "GitHub", url: "https://github.com/Reiuiji" }
         ]
       }/*,
       {
@@ -42,6 +42,30 @@ export const creditsData: CreditSection[] = [
           { label: "Website", url: "https://example.com" }
         ]
       }*/
+    ]
+  },
+  {
+    title: "Data Team",
+    description: "The team in charge of managing telemetry and data insights",
+    contributors: [
+      {
+        name: "Emma aka TheMadhatterbrony",
+        role: ["Data Analyst"],
+        avatarUrl: "https://cdn.discordapp.com/avatars/497028042573611008/adca9244ac4835f873ebc05491177598.webp?size=256",
+        links: []
+      }
+    ]
+  },
+  {
+    title: "Infrastrucure Team",
+    description: "The team responsible for maintaining the platform's long-lived infrastructure.",
+    contributors: [
+      {
+        name: "ScotchVA",
+        role: ["Infrastructure Engineer"],
+        avatarUrl: "https://cdn.discordapp.com/avatars/107217539041353728/3b6926431e9edb35ed4e227a1a65850b.webp?size=256",
+        links: []
+      }
     ]
   }/*,
   {

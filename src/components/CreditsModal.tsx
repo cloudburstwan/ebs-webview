@@ -108,9 +108,9 @@ const CreditsModal = ({ isOpen, onClose }: CreditsModalProps) => {
                         <span className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">
                           {contrib.name}
                         </span>
-                        {contrib.role && (
+                        {contrib.role && contrib.role.length > 0 && (
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
-                            {contrib.role}
+                            {contrib.role.join(", ")}
                           </span>
                         )}
                       </div>
