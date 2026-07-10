@@ -153,7 +153,7 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
 
   // Build player sources from API-provided playback URLs
   useEffect(() => {
-    if (!currentStream || currentStream.id !== stream) {
+    if (!currentStream || (currentStream.id !== stream && currentStream.name !== stream)) {
       return;
     }
 
