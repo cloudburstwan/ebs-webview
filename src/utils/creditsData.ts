@@ -67,7 +67,7 @@ export const creditsData: CreditSection[] = [
         links: []
       }
     ]
-  }/*,
+  },/*,
   {
     title: "Art & Design",
     description: "Creators of the beautiful themes, assets, and branding graphics.",
@@ -104,22 +104,24 @@ export const creditsData: CreditSection[] = [
         role: "German Localization"
       }
     ]
-  },
+  },*/
   {
     title: "Special Thanks",
     description: "Organizations and individuals who made this project possible.",
     contributors: [
       {
         name: "Pony Town Team",
-        role: "Layout Inspiration",
+        avatarUrl: "https://s3.cloudburst.lgbt/uploads/ponytown-logo-small.png",
+        role: [],
         links: [
-          { label: "Website", url: "https://pony.town" }
+          { label: "Main Server", url: "https://pony.town" },
+          { label: "Event Server", url: "https://event.pony.town" }
         ]
       },
       {
         name: "Open Source Community",
-        role: "Supporting Libraries"
+        role: ["Supporting Libraries"]
       }
     ]
-  }*/
+  }
 ];
