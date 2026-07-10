@@ -32,46 +32,62 @@ export function useEbsData(stream: string, setStream: (s: string) => void) {
       console.log("[useEbsData] Fetched streams:", streams);
       setAvailableStreams(streams);
 
-      // Find stream matching current id or default to first one if not found
-      console.log("[useEbsData] Looking for stream match by id:", stream);
-      const match = streams.find((s: StreamEntry) => s.id === stream);
-
       let activeMatch: StreamEntry | null = null;
-      if (match) {
-        console.log("[useEbsData] Match found:", match.id, match.name);
-        activeMatch = match;
+      const isManualStream = stream && stream !== DEFAULT_STREAM;
+      const listMatch = streams.find((s: StreamEntry) => s.id === stream);
+
+      if (listMatch) {
+        console.log("[useEbsData] Match found in streams list:", listMatch.id, listMatch.name);
+        activeMatch = listMatch;
         setNoStreamsAvailable(false);
+      } else if (isManualStream) {
+        console.log("[useEbsData] Manual stream requested, attempting direct fetch:", stream);
+        setNoStreamsAvailable(false);
+        try {
+          const directMatch = await ebsApi.getStream(stream, abortControllerRef.current?.signal);
+          if (directMatch) {
+            console.log("[useEbsData] Direct fetch succeeded for manual stream:", directMatch.id);
+            activeMatch = directMatch;
+          } else {
+            console.log("[useEbsData] Direct fetch returned 404/not found. Showing offline status for:", stream);
+            activeMatch = {
+              id: stream,
+              name: stream,
+              humanName: stream,
+              status: StreamStatus.Offline,
+              witholdStatus: WithholdStatus.None,
+              viewers: 0,
+              urls: null,
+            };
+          }
+        } catch (e) {
+          console.warn("[useEbsData] Direct fetch failed for manual stream. Falling back to offline status:", e);
+          activeMatch = {
+            id: stream,
+            name: stream,
+            humanName: stream,
+            status: StreamStatus.Offline,
+            witholdStatus: WithholdStatus.None,
+            viewers: 0,
+            urls: null,
+          };
+        }
       } else if (streams.length > 0 && stream === DEFAULT_STREAM) {
         console.log("[useEbsData] No match for default stream, falling back to first stream:", streams[0].id, streams[0].name);
         activeMatch = streams[0];
         setStream(streams[0].id);
         setNoStreamsAvailable(false);
-      } else if (streams.length === 0) {
+      } else {
         // API returned no streams at all — nothing is configured/available
         console.log("[useEbsData] API returned empty stream list. No streams available.");
         activeMatch = null;
         setNoStreamsAvailable(true);
-      } else if (stream) {
-        // [Bypass Check] If stream is provided via URL (or otherwise), allow loading even if not in the list
-        // Only applies when the API has streams but the requested one isn't among them
-        console.log("[useEbsData] No match found in list, but stream is provided. Bypassing check for:", stream);
-        setNoStreamsAvailable(false);
-
-        // Create a synthetic StreamEntry for the unknown stream so validation logic can proceed
-        activeMatch = {
-          id: stream,
-          name: stream,
-          humanName: stream,
-          status: StreamStatus.Live, // Assume live to attempt loading
-          witholdStatus: WithholdStatus.None,
-          viewers: 0,
-          urls: null,
-        };
       }
 
       // Refresh the current stream's live status via the per-stream endpoint.
       // This gives us the most up-to-date status/withhold info AND embedded playback URLs.
-      if (activeMatch && activeMatch.id) {
+      // Skip this if it's a manual stream since we already performed a direct fetch (or fell back to offline on 404).
+      if (activeMatch && activeMatch.id && !isManualStream) {
         try {
           const fresh = await ebsApi.getStream(activeMatch.id, abortControllerRef.current?.signal);
           if (fresh) {

@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import StreamDropdown from './components/StreamDropdown';
 import StatusDropdown from './components/StatusDropdown';
+import CreditsModal from './components/CreditsModal';
 import { useEbsData } from './hooks/useEbsData';
 import { StreamStatus, WithholdStatus } from './utils/ebs';
 import { DEFAULT_STREAM, APP_NAME } from './utils/env';
@@ -23,6 +24,7 @@ function App() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isStreamSelectionOpen, setIsStreamSelectionOpen] = useState(false);
   const [expandedStreamId, setExpandedStreamId] = useState<string | null>(null);
+  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
 
   const {
     isLoading,
@@ -118,7 +120,9 @@ function App() {
         </div>
       </main>
 
-      <Footer />
+      <Footer onOpenCredits={() => setIsCreditsOpen(true)} />
+
+      <CreditsModal isOpen={isCreditsOpen} onClose={() => setIsCreditsOpen(false)} />
     </div>
   );
 }
